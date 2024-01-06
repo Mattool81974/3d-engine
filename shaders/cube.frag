@@ -11,16 +11,22 @@ uniform sampler2D u_texture_2;
 uniform sampler2D u_texture_3;
 uniform sampler2D u_texture_4;
 uniform sampler2D u_texture_5;
+uniform vec2 u_texture_count_size_0;
+uniform vec2 u_texture_count_size_1;
+uniform vec2 u_texture_count_size_2;
+uniform vec2 u_texture_count_size_3;
+uniform vec2 u_texture_count_size_4;
+uniform vec2 u_texture_count_size_5;
 
 void main() {
     vec3 color = vec3(face_0/5.0, 0.0, 0.0);
 
-    if(face_0 == 0.0) {color = texture(u_texture_0, uv_0).rgb;}
-    else if(face_0 == 1.0) {color = texture(u_texture_1, uv_0).rgb;}
-    else if(face_0 == 2.0) {color = texture(u_texture_2, uv_0).rgb;}
-    else if(face_0 == 3.0) {color = texture(u_texture_3, uv_0).rgb;}
-    else if(face_0 == 4.0) {color = texture(u_texture_4, uv_0).rgb;}
-    else {color = texture(u_texture_5, uv_0).rgb;}
+    if(face_0 == 0.0) {color = texture(u_texture_0, vec2(uv_0.x * u_texture_count_size_0.x, uv_0.y * u_texture_count_size_0.y)).rgb;}
+    else if(face_0 == 1.0) {color = texture(u_texture_1, vec2(uv_0.x * u_texture_count_size_1.x, uv_0.y * u_texture_count_size_1.y)).rgb;}
+    else if(face_0 == 2.0) {color = texture(u_texture_2, vec2(uv_0.x * u_texture_count_size_2.x, uv_0.y * u_texture_count_size_2.y)).rgb;}
+    else if(face_0 == 3.0) {color = texture(u_texture_3, vec2(uv_0.x * u_texture_count_size_3.x, uv_0.y * u_texture_count_size_3.y)).rgb;}
+    else if(face_0 == 4.0) {color = texture(u_texture_4, vec2(uv_0.x * u_texture_count_size_4.x, uv_0.y * u_texture_count_size_4.y)).rgb;}
+    else {color = texture(u_texture_5, vec2(uv_0.x * u_texture_count_size_2.x, uv_0.y * u_texture_count_size_5.y)).rgb;}
 
     fragColor = vec4(color, 1.0);
 }

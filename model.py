@@ -132,8 +132,8 @@ class Triangle_VBO(VBO):
         """
         super().__init__(base_struct)
 
-        self.attributes = ["in_texcoord_0", "in_normal", "in_position"]
-        self.format = "2f 3f 3f"
+        self.attributes = ["in_texcoord_0", "in_position"]
+        self.format = "2f 3f"
 
     def get_vertex_data(self):
         """Return the data with the vertex
@@ -144,10 +144,6 @@ class Triangle_VBO(VBO):
         tex_coord_vertices = [(0, 0), (1, 0), (1, 1)]
         tex_coord_vertices = np.array(tex_coord_vertices, dtype="f4")
 
-        normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1)]
-        normals = np.array(normals, dtype="f4")
-
-        vertex_data = np.hstack([normals, vertex_data])
         vertex_data = np.hstack([tex_coord_vertices, vertex_data])
 
         return vertex_data
@@ -164,7 +160,7 @@ class Square_VBO(VBO):
         """
         super().__init__(base_struct)
 
-        self.attributes = ["in_texcoord_0", "in_normal", "in_position"]
+        self.attributes = ["in_texcoord_0", "in_position"]
         self.format = "2f 3f 3f"
 
     def get_vertex_data(self):
@@ -177,10 +173,6 @@ class Square_VBO(VBO):
         tex_coord_vertices = [(0, 0), (1, 1), (1, 0), (0, 0), (0, 1), (1, 1)]
         tex_coord_vertices = np.array(tex_coord_vertices, dtype="f4")
 
-        normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1)]
-        normals = np.array(normals, dtype="f4")
-
-        vertex_data = np.hstack([normals, vertex_data])
         vertex_data = np.hstack([tex_coord_vertices, vertex_data])
 
         return vertex_data
@@ -197,8 +189,8 @@ class Cube_VBO(VBO):
         """
         super().__init__(base_struct)
 
-        self.attributes = ["in_texcoord_0", "in_normal", "in_position", "in_face"]
-        self.format = "2f 3f 3f f"
+        self.attributes = ["in_texcoord_0", "in_position", "in_face"]
+        self.format = "2f 3f f"
     
     def get_vertex_data(self):
         """Return the data with the vertex
@@ -222,14 +214,6 @@ class Cube_VBO(VBO):
                              (3, 1, 2), (3, 0, 1)]
         tex_coord_data = self.get_data(tex_coord_vertices, tex_coord_indices)
 
-        normals = [(0, 0, 1) *6,
-                   (1, 0, 0) * 6,
-                   (0, 0, -1) * 6,
-                   (-1, 0, 0) * 6,
-                   (0, 1, 0) * 6,
-                   (0, -1, 0) * 6]
-        normals = np.array(normals, dtype="f4").reshape(36, 3)
-
         face = []
         for i in range(6):
             for _ in range(6):
@@ -237,7 +221,6 @@ class Cube_VBO(VBO):
         face = np.array(face, dtype="f")
 
         vertex_data = np.hstack([vertex_data, face])
-        vertex_data = np.hstack([normals, vertex_data])
         vertex_data = np.hstack([tex_coord_data, vertex_data])
         return vertex_data
  
@@ -378,7 +361,7 @@ class Graphic_Object(bs.Transform_Object):
     """Class representating a graphic object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, texture: Texture, vbo: VBO, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0), shader_path = "shaders/triangle", type: str = "graphic", do_on_init = True) -> None:
+    def __init__(self, base_struct: bs.Base_Struct, texture: Texture, vbo: VBO, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0), shader_path = "shaders/triangle", texture_count_size: tuple = (1, 1), type: str = "graphic", do_on_init = True) -> None:
         """Create a graphic object
 
         Args:
@@ -391,6 +374,7 @@ class Graphic_Object(bs.Transform_Object):
 
         self.base_struct = base_struct
         self.texture = texture
+        self.texture_count_size = [texture_count_size]
         self.type = type
 
         self.texture = [texture]
@@ -410,14 +394,14 @@ class Graphic_Object(bs.Transform_Object):
             bs.Base_Struct: base struct of the game
         """
         return self.base_struct
-
-    def get_texture_path(self) -> str:
-        """Return the path through the texture
+    
+    def get_texture_count_size(self) -> list:
+        """Return a list of number of texture
 
         Returns:
-            str: path through the texture
+            tuple: number of texture
         """
-        return self.texture_path
+        return self.texture_count_size
     
     def get_type(self) -> str:
         """Return the type of the object
@@ -442,6 +426,7 @@ class Graphic_Object(bs.Transform_Object):
         self.get_vao().get_program().get_program()["m_proj"].write(self.get_base_struct().get_camera_value().get_projection())
         self.get_vao().get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
         self.get_vao().get_program().get_program()["u_texture_0"] = self.get_base_struct().get_texture_count()
+        self.get_vao().get_program().get_program()["u_texture_count_size_0"].write(glm.vec2(self.get_texture_count_size()[0]))
         self.texture[0].get_texture().use(self.get_base_struct().get_texture_count())
         self.get_base_struct().set_texture_count(self.get_base_struct().get_texture_count() + 1)
 
@@ -458,11 +443,22 @@ class Graphic_Object(bs.Transform_Object):
         self.vao.get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
         self.get_vao().render()
 
+    def set_scale(self, scale: tuple, scale_texture: bool = False):
+        """Change the scale of the object
+
+        Args:
+            scale (tuple): scale of the object
+        """
+        self.scale = scale
+
+        if scale_texture:
+            self.texture_count_size[0] = scale
+
 class Cube_Object(Graphic_Object):
     """Class representating a graphic cube, heritating from Graphics_Object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, texture: list, vbo: VBO, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0), shader_path: str = "shaders/cube", type: str = "cube") -> None:
+    def __init__(self, base_struct: bs.Base_Struct, texture: list, vbo: VBO, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0), scale_texture: bool = True, shader_path: str = "shaders/cube", texture_count_size: list = ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)), type: str = "cube") -> None:
         """Create a graphics cube
 
         Args:
@@ -474,11 +470,22 @@ class Cube_Object(Graphic_Object):
             scale (tuple, optional): scale of the cube. Defaults to (0, 0, 0).
             type (str, optional): tpe fo the cube. Defaults to "cube".
         """
-        super().__init__(base_struct, texture[0], vbo, parent, position, rotation, scale, shader_path, type, False)
+        self.scale_texture = scale_texture
+        super().__init__(base_struct, texture[0], vbo, parent, position, rotation, (1, 1, 1), shader_path, texture_count_size[0], type, False)
 
         for i in range(1, 6):
             self.texture.append(texture[i])
+            self.texture_count_size.append(texture_count_size[i])
+        self.set_scale(scale)
         self.on_init()
+
+    def get_scale_texture(self) -> bool:
+        """Return if the texture is scaled with set_scale
+
+        Returns:
+            bool: texture is scaled with set_scale
+        """
+        return self.scale_texture
 
     def on_init(self) -> None:
         """Init the uniform variables into the shader
@@ -486,5 +493,31 @@ class Cube_Object(Graphic_Object):
         self.get_vao().get_program().get_program()["m_model"].write(self.get_model_matrix())
         self.get_vao().get_program().get_program()["m_proj"].write(self.get_base_struct().get_camera_value().get_projection())
         self.get_vao().get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
-        for t in range(0, len(self.texture)):
+        for t in range(len(self.texture)):
             self.get_vao().get_program().get_program()["u_texture_" + str(t)] = self.texture[t].get_bind_number()
+            self.get_vao().get_program().get_program()["u_texture_count_size_" + str(t)].write(glm.vec2(self.get_texture_count_size()[t]))
+
+    def set_scale(self, scale: tuple):
+        """Change the scale of the object
+
+        Args:
+            scale (tuple): scale of the object
+        """
+        if self.get_scale_texture():
+            if self.get_scale()[0] != scale[0]:
+                self.texture_count_size[0] = (scale[0], self.get_texture_count_size()[0][1])
+                self.texture_count_size[2] = (scale[0], self.get_texture_count_size()[2][1])
+                self.texture_count_size[4] = (scale[0], self.get_texture_count_size()[4][0])
+                self.texture_count_size[5] = (scale[0], self.get_texture_count_size()[5][0])
+            if self.get_scale()[1] != scale[1]:
+                self.texture_count_size[0] = (self.get_texture_count_size()[0][0], scale[1])
+                self.texture_count_size[1] = (self.get_texture_count_size()[0][0], scale[1])
+                self.texture_count_size[2] = (self.get_texture_count_size()[0][0], scale[1])
+                self.texture_count_size[3] = (self.get_texture_count_size()[0][0], scale[1])
+            if self.get_scale()[2] != scale[2]:
+                self.texture_count_size[1] = (scale[2], self.get_texture_count_size()[1][1])
+                self.texture_count_size[3] = (scale[2], self.get_texture_count_size()[3][1])
+                self.texture_count_size[4] = (self.get_texture_count_size()[4][0], scale[2])
+                self.texture_count_size[5] = (self.get_texture_count_size()[5][0], scale[2])
+        
+        self.scale = scale

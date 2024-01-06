@@ -35,18 +35,18 @@ class Game:
         self.player = pl.Player(self.get_base_struct(), position = (0, 2, 0))
         self.scene = sc.Scene(self.get_advanced_struct())
 
-        self.scene.new_object("sol", "cube", scale = (27, 1, 27), texture_path = "textures/test")
-        self.scene.new_object("mur1", "cube", position = (13, 2.3, 0), rotation = (0, 0, 0), scale = (1, 5, 27))
-        self.scene.new_object("mur2", "cube", position = (0, 2.3, 13), rotation = (0, 0, 0), scale = (25, 5, 1))
-        self.scene.new_object("mur3", "cube", position = (-13, 2.3, 0), rotation = (0, 0, 0), scale = (1, 5, 27))
-        self.scene.new_object("mur4", "cube", position = (0, 2.3, -13), rotation = (0, 0, 0), scale = (25, 5, 1))
+        self.scene.new_object("sol", "cube", scale = (27, 1, 27))
+        self.scene.new_object("mur1", "cube", position = (13, 2.3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
+        self.scene.new_object("mur2", "cube", position = (0, 2.3, 13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
+        self.scene.new_object("mur3", "cube", position = (-13, 2.3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
+        self.scene.new_object("mur4", "cube", position = (0, 2.3, -13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
 
         sc2d = sc.Scene_2D((25, 25))
         sc2d.load_map("maps/level0.txt")
         for j in range(sc2d.get_scene_size()[1]):
             for i in range(sc2d.get_scene_size()[0]):
                 if sc2d.get_part_at(i, j) == 1:
-                    self.scene.new_object(str(i) + ";" + str(j), "cube", position = (12 - 1 * i, 2.3, 12 - 1 * j), scale = (1, 5, 1))
+                    self.scene.new_object(str(i) + ";" + str(j), "cube", position = (12 - 1 * i, 2.5, 12 - 1 * j), scale = (1, 5, 1), texture_path = "textures/cobble")
 
     def destroy(self) -> None:
         """Destroy and end the game
@@ -109,7 +109,8 @@ class Game:
         while True:
             self.handle_events()
             self.update()
-            self.get_base_struct().set_delta_time(self.get_clock().tick(120) * 0.001)
+            delta_time = self.get_clock().tick(5000) * 0.001
+            self.get_base_struct().set_delta_time(delta_time)
 
     def update(self) -> None:
         """Update the screen

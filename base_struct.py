@@ -21,7 +21,7 @@ def get_all_files(path: str) -> list:
                 all_paths.append(pa)
         else:
             extension = str.lower(p.split(".")[-1])
-            if extension == "jpg" or extension == "png":
+            if extension == "jpg" or extension == "png" or extension == "jpeg":
                 all_paths.append((path + "/" + p, p, extension))
     return all_paths
 
@@ -29,7 +29,7 @@ class Transform_Object:
     """Class representing an object which can be transformed
     """
 
-    def __init__(self, parent = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0)) -> None:
+    def __init__(self, parent = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
         """Create an object which can be transformed
 
         Args:
@@ -38,9 +38,13 @@ class Transform_Object:
             scale (tuple, optional): scale of the plan. Defaults to (0, 0, 0).
         """
         self.parent = parent
-        self.position = position
-        self.rotation = rotation
-        self.scale = scale
+        self.position = (0, 0, 0)
+        self.rotation = (0, 0, 0)
+        self.scale = (1, 1, 1)
+
+        self.set_position(position)
+        self.set_rotation(rotation)
+        self.set_scale(scale)
 
         self.forward = glm.vec3(0, 0, -1)
         self.right = glm.vec3(1, 0, 0)
