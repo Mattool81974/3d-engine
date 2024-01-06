@@ -1,4 +1,5 @@
 # Import librairies
+import advanced_struct as ad
 import base_struct as bs
 import glm
 import model
@@ -61,17 +62,26 @@ class Player(bs.Transform_Object):
     """Class representing the player
     """
 
-    def __init__(self, base_struct, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
+    def __init__(self, advanced_struct: ad.Advanced_Struct, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
         """Create a player
         """
         super().__init__(parent, position, rotation, scale)
-        self.base_struct = base_struct
+        self.advanced_struct = advanced_struct
         self.camera = Camera(self.get_base_struct(), self)
+        self.hud = model.HUD(self.get_base_struct(), self.get_advanced_struct().get_all_vbos()["square"])
 
         self.forward = glm.vec3(0, 0, -1)
         self.right = glm.vec3(1, 0, 0)
         self.speed = 5
         self.up = glm.vec3(0, 1, 0)
+
+    def get_advanced_struct(self) -> ad.Advanced_Struct:
+        """Return the advanced struct of the game
+
+        Returns:
+            ad.Advanced_Struct: advanced struct of the game
+        """
+        return self.advanced_struct
 
     def get_base_struct(self) -> bs.Base_Struct:
         """Return the base struct of the game
@@ -79,7 +89,7 @@ class Player(bs.Transform_Object):
         Returns:
             bs.Base_Struct: base struct of the game
         """
-        return self.base_struct
+        return self.get_advanced_struct().get_base_struct()
     
     def get_speed(self) -> float:
         """Return the speed of the player
@@ -118,3 +128,4 @@ class Player(bs.Transform_Object):
         self.handle_player_move()
         self.handle_player_rotation()
         self.camera.update()
+        self.hud.update()

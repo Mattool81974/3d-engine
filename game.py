@@ -22,7 +22,7 @@ class Game:
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_COMPATIBILITY)
 
-        self.window = pg.display.set_mode(WINDOW_SIZE, flags=pg.OPENGL | pg.DOUBLEBUF)
+        self.window = pg.display.set_mode(WINDOW_SIZE, flags=pg.OPENGLBLIT | pg.DOUBLEBUF)
 
         pg.event.set_grab(True)
         pg.mouse.set_visible(False)
@@ -32,7 +32,7 @@ class Game:
         self.advanced_struct = ad.Advanced_Struct(self.get_base_struct())
         self.clock = pg.time.Clock()
 
-        self.player = pl.Player(self.get_base_struct(), position = (0, 2, 0))
+        self.player = pl.Player(self.get_advanced_struct(), position = (0, 2, 0))
         self.scene = sc.Scene(self.get_advanced_struct())
 
         self.scene.new_object("sol", "cube", scale = (27, 1, 27))
@@ -119,5 +119,7 @@ class Game:
         self.get_player().update()
         self.get_scene().update()
         self.get_scene().render()
-        pg.draw.rect(self.window, (255, 0, 0), (50, 50, 100, 100))
+        surface = pg.Surface((100, 100))
+        surface.fill((0, 0, 0))
+        self.window.blit(surface, (50, 50))
         pg.display.flip()

@@ -19,6 +19,7 @@ class Shader_Program:
         """
         self.base_struct = base_struct
         self.program = self.load_program(path)
+        self.program_path = path
 
     def destroy(self) -> None:
         """Destroy the shader program
@@ -40,6 +41,14 @@ class Shader_Program:
             mgl.Program: program into the shader program
         """
         return self.program
+    
+    def get_program_path(self) -> str:
+        """Return the path of the program
+
+        Returns:
+            str: path of the program
+        """
+        return self.program_path
     
     def load_program(self, path) -> mgl.Program:
         vertex_shader = ""
@@ -161,7 +170,7 @@ class Square_VBO(VBO):
         super().__init__(base_struct)
 
         self.attributes = ["in_texcoord_0", "in_position"]
-        self.format = "2f 3f 3f"
+        self.format = "2f 3f"
 
     def get_vertex_data(self):
         """Return the data with the vertex
@@ -365,7 +374,7 @@ class Graphic_Object(bs.Transform_Object):
         """Create a graphic object
 
         Args:
-            texture_path (str): path through the texture
+            texture (Texture): texture of the object
             position (tuple, optional): position of the plan. Defaults to (0, 0, 0).
             rotation (tuple, optional): rotation of the plan. Defaults to (0, 0, 0).
             type (str, optional): type of the object. Defaults to "graphic".
@@ -373,7 +382,6 @@ class Graphic_Object(bs.Transform_Object):
         super().__init__(parent, position, rotation, scale)
 
         self.base_struct = base_struct
-        self.texture = texture
         self.texture_count_size = [texture_count_size]
         self.type = type
 
@@ -521,3 +529,29 @@ class Cube_Object(Graphic_Object):
                 self.texture_count_size[5] = (self.get_texture_count_size()[5][0], scale[2])
         
         self.scale = scale
+
+class HUD(Graphic_Object):
+    """Class representating the HUD screen, heritating from Graphics_Object
+    """
+
+    def __init__(self, base_struct: bs.Base_Struct, vbo: VBO, shader_path="shaders/hud", texture: str = "textures/hud.png", type: str = "hud") -> None:
+        """Create an HUD object
+
+        Args:
+            base_struct (bs.Base_Struct): base struct in the game
+            vbo (VBO): vertex buffer object for the HUD
+            texture (list): list of textures into the cube
+            parent (Transform_Object): parent of the HUD
+            shader_path (str, optional): path through the shader. Defaults to "shaders/triangle".
+            type (str, optional): tpe fo the cube. Defaults to "cube".
+            do_on_init (bool, optional): boolean if the super() do the init. Defaults to True.
+        """
+        self.texture = Texture(base_struct, texture)
+        super().__init__(base_struct, self.texture, vbo, None, (0, 0, 0), (0, 0, 0), (1, 1, 1), shader_path, (1, 1), type)
+
+    def on_init(self) -> None:
+        """Init the uniform variables into the shader
+        """
+        self.get_vao().get_program().get_program()["u_texture_0"] = self.get_base_struct().get_texture_count()
+        self.texture[0].get_texture().use(self.get_base_struct().get_texture_count())
+        self.get_base_struct().set_texture_count(self.get_base_struct().get_texture_count() + 1)

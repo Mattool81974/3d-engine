@@ -1,8 +1,8 @@
 #version 330 core
 
 layout (location = 0) in vec2 in_texcoord_0;
-layout (location = 2) in vec3 in_position;
-layout (location = 3) in float in_face;
+layout (location = 1) in vec3 in_position;
+layout (location = 2) in float in_face;
 
 out float face_0;
 out vec2 uv_0;
