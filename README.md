@@ -1,2 +1,14 @@
-# 3d-engine
+# Matix
 Little 3D engine test
+## Warning
+All this README will be in french. Indeed, this project is made for a school project in France.
+## Présentation
+Matix est un petit moteur de jeu 3D inspiré de Unity fait pour pouvoir créer des jeux comme Doom.
+Cependant, il n'utilise pas la technique de ray-cast mais une technique plus récente, OpenGL.
+Pour cela, il utiliser les lib moderngl, pyglm et pygame.
+### Comment fonctionne OpenGL ?
+OpenGL est une bibliothèque graphique permettant d'afficher facilement de la 3D (ou 2D) sur un écran. Pour fonctionner, OpenGL utilise un "pipeline graphique", soit une suite d'algorithmes permettant d'afficher quelque chose à l'écran appelés "shaders", tournant sur GPU. Il faut lui donner une suite de points formants une suite de triangles. OpenGL va (en gros) calculer les points, puis calculer les connexions, puis calculer les pixels de chaques triangles (appelé fragment), puis d'afficher le tout. Dans ce pipeline, il y a 2 shaders modifiables : le shader de point et le shader de fragment. Le premier permet de calculer la position précise des points et le deuxième la couleur de fragments du triangle. Pour cela, il faut passer les points dans la mémoire du GPU avec ce qu'on appelle un VBO (vertex buffer object). Le shader est lui modifié à l'aide d'un programme de shader. Le tout est traité dans ce qu'on appelle un VAO (vertex array object). Il s'occupera de l'affichage.
+### Comment fonctionne ModernGL et PyGlm ?
+Ces 2 librairies Python permettent d'utiliser OpenGL avec Python. ModernGL permet d'accéder directement à OpenGL et PyGLM offre des moyens d'y accéder plus facilement. Pygame permet de faciliter un peu plus l'accés. Pour commencer, il faut créer un contexte OpenGL, en sachant que Pygame le fait automatiquement avec la fonction init(). On peut le récuperer grâce à ModernGL et accéder au à OpenGL. Avec ce contexte, on peut créer un programme de shader, des VBOs et VAOs sans difficultés. De plus, avec Pygame, on peut définir quelques paramètre OpenGL facilement.
+### Comment est structuré le moteur de jeu ?
+Le moteur de jeu est découpé en beaucoup de fichiers, pour simplifier l'accés aux fonctionnalités. Le fichier main.py permet de lancer le jeu et de modifier facilement le jeu. Le fichier game.py permet de stocker la classe permettant l'accés au jeu. Le fichier scene.py permet de stocker tout ce qui est à propos des scènes. Le fichier base_struct.py permet de définir une classe contenant des variables/classes globals et de les utiliser facilement. C'est pareil pour advanced_struct, mais avec des variables plus avancées. Le fichier player.py contient tout ce qui permet l'utilisation du joueur et le fichier model.py contient l'utilisation des VBO, VAO, programmes de shaders, textures et modèles simples. Le dossier map contient les maps pour le jeu, shaders les shaders du jeu et textures les différents textures du jeu.
