@@ -377,7 +377,7 @@ class Base_Struct:
         """Create a base struct in the game
         """
         self.context = context
-        self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
+        self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE | mgl.BLEND)
         self.delta_time = 0
         self.mouse_rel_pos = (0, 0)
         self.window_size = window_size

@@ -175,11 +175,11 @@ class Square_VBO(VBO):
     def get_vertex_data(self):
         """Return the data with the vertex
         """
-        vertices = [(-1, -1, 0.0), (1, 1, 0.0), (1, -1, 0.0),
-                    (-1, -1, 0.0), (-1, 1, 0.0), (1, 1, 0.0)]
+        vertices = [(-1, -1, 0.0), (1, 1, 0.0), (-1, 1, 0.0),
+                    (-1, -1, 0.0), (1, -1, 0.0), (1, 1, 0.0)]
         vertex_data = np.array(vertices, dtype="f4")
 
-        tex_coord_vertices = [(0, 0), (1, 1), (1, 0), (0, 0), (0, 1), (1, 1)]
+        tex_coord_vertices = [(0, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1)]
         tex_coord_vertices = np.array(tex_coord_vertices, dtype="f4")
 
         vertex_data = np.hstack([tex_coord_vertices, vertex_data])
@@ -354,9 +354,9 @@ class Texture:
         Returns:
             pg.Surface: texture loaded
         """
-        texture = pg.image.load(path).convert()
+        texture = pg.image.load(path).convert_alpha()
         texture = pg.transform.flip(texture, self.get_flip()[0], self.get_flip()[1])
-        texture = self.get_base_struct().get_context().texture(size = texture.get_size(), components = 3, data = pg.image.tostring(texture, "RGB"))
+        texture = self.get_base_struct().get_context().texture(size = texture.get_size(), components = 4, data = pg.image.tostring(texture, "RGBA"))
         texture.filter = (mgl.LINEAR_MIPMAP_LINEAR, mgl.LINEAR)
         texture.build_mipmaps()
         texture.anisotropy = 32.0
@@ -462,6 +462,11 @@ class Graphic_Object(bs.Transform_Object):
         if scale_texture:
             self.texture_count_size[0] = scale
 
+    def update(self) -> None:
+        """Update the object during a frame
+        """
+        self.render()
+
 class Cube_Object(Graphic_Object):
     """Class representating a graphic cube, heritating from Graphics_Object
     """
@@ -535,7 +540,7 @@ class HUD(Graphic_Object):
     """
 
     def __init__(self, base_struct: bs.Base_Struct, vbo: VBO, shader_path="shaders/hud", texture: str = "textures/hud.png", type: str = "hud") -> None:
-        """Create an HUD object
+        """Create an HUD object 
 
         Args:
             base_struct (bs.Base_Struct): base struct in the game
@@ -547,7 +552,7 @@ class HUD(Graphic_Object):
             do_on_init (bool, optional): boolean if the super() do the init. Defaults to True.
         """
         self.texture = Texture(base_struct, texture)
-        super().__init__(base_struct, self.texture, vbo, None, (0, 0, 0), (0, 0, 0), (1, 1, 1), shader_path, (1, 1), type)
+        super().__init__(base_struct, self.texture, vbo, None, (0, 0, 0), (0, 0, 0), (1, 1, 1), shader_path, (1, 1), type, True)
 
     def on_init(self) -> None:
         """Init the uniform variables into the shader
@@ -555,3 +560,10 @@ class HUD(Graphic_Object):
         self.get_vao().get_program().get_program()["u_texture_0"] = self.get_base_struct().get_texture_count()
         self.texture[0].get_texture().use(self.get_base_struct().get_texture_count())
         self.get_base_struct().set_texture_count(self.get_base_struct().get_texture_count() + 1)
+
+    def render(self) -> None:
+        """Render the HUD into the screen
+        """
+        self.on_render()
+        self.vao.get_program().get_program()["m_model"].write(self.get_model_matrix())
+        self.get_vao().render()

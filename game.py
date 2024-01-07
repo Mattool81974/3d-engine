@@ -22,7 +22,7 @@ class Game:
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_COMPATIBILITY)
 
-        self.window = pg.display.set_mode(WINDOW_SIZE, flags=pg.OPENGLBLIT | pg.DOUBLEBUF)
+        self.window = pg.display.set_mode(WINDOW_SIZE, flags=pg.OPENGL | pg.DOUBLEBUF)
 
         pg.event.set_grab(True)
         pg.mouse.set_visible(False)
@@ -36,17 +36,17 @@ class Game:
         self.scene = sc.Scene(self.get_advanced_struct())
 
         self.scene.new_object("sol", "cube", scale = (27, 1, 27))
-        self.scene.new_object("mur1", "cube", position = (13, 2.3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
-        self.scene.new_object("mur2", "cube", position = (0, 2.3, 13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
-        self.scene.new_object("mur3", "cube", position = (-13, 2.3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
-        self.scene.new_object("mur4", "cube", position = (0, 2.3, -13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
+        self.scene.new_object("mur1", "cube", position = (13, 3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
+        self.scene.new_object("mur2", "cube", position = (0, 3, 13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
+        self.scene.new_object("mur3", "cube", position = (-13, 3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
+        self.scene.new_object("mur4", "cube", position = (0, 3, -13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
 
         sc2d = sc.Scene_2D((25, 25))
         sc2d.load_map("maps/level0.txt")
         for j in range(sc2d.get_scene_size()[1]):
             for i in range(sc2d.get_scene_size()[0]):
                 if sc2d.get_part_at(i, j) == 1:
-                    self.scene.new_object(str(i) + ";" + str(j), "cube", position = (12 - 1 * i, 2.5, 12 - 1 * j), scale = (1, 5, 1), texture_path = "textures/cobble")
+                    self.scene.new_object(str(i) + ";" + str(j), "cube", position = (12 - 1 * i, 3, 12 - 1 * j), scale = (1, 5, 1), texture_path = "textures/cobble")
 
     def destroy(self) -> None:
         """Destroy and end the game
@@ -116,9 +116,9 @@ class Game:
         """Update the screen
         """
         self.get_base_struct().get_context().clear(255, 255, 255)
-        self.get_player().update()
         self.get_scene().update()
         self.get_scene().render()
+        self.get_player().update()
         surface = pg.Surface((100, 100))
         surface.fill((0, 0, 0))
         self.window.blit(surface, (50, 50))
