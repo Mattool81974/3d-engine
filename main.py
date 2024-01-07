@@ -1,4 +1,5 @@
 import game
+import physic as ps
 import scene as sc
 
 jeu = game.Game()
@@ -8,9 +9,14 @@ jeu.assign_map_part("1", "textures/concrete_wall")
 jeu.assign_map_part("2", "textures/concrete_pillar")
 
 # Load scene
-scene = jeu.new_scene("level0", "maps/level0.wad")
+scene, scene2D = jeu.new_scene("level0", "maps/level0.wad")
 scene.set_scale((1, 1, 1))
 jeu.set_current_scene("level0")
+
+# Physic
+physic_scene = jeu.new_physic_scene("level0", scene2D)
+player = physic_scene.new_object("player", jeu.player, 75)
+player.set_gravity_force(0)
 
 # Load objects
 sol = scene.new_object("sol", "cube", position = (12, 0, 12), scale = (27, 1, 27), texture_path = "textures/yellow_tile")

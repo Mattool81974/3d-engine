@@ -5,6 +5,7 @@ import glm
 import model
 import moderngl as mgl
 import numpy as np
+import physic as ps
 import pygame as pg
 import sys
 
@@ -16,6 +17,7 @@ class Scene_2D:
         """Create a 2d scene
         """
         self.map_path = ""
+        self.objects = {}
         self.pos = (0, 0)
         self.scene_size = scene_size
 
@@ -28,6 +30,7 @@ class Scene_2D:
             part (int): part to fill
         """
         self.map = []
+        self.objects.clear()
         for _ in range(self.get_scene_size()[1]):
             line = []
             for __ in range(self.get_scene_size()[0]):
@@ -41,6 +44,14 @@ class Scene_2D:
             str: path of the map
         """
         return self.map_path
+    
+    def get_objects(self) -> dict:
+        """Return a dict of every transform object created
+
+        Returns:
+            dict: every transform object created
+        """
+        return self.objects
 
     def get_part_at(self, x: int, y: int) -> int:
         """Return a part into the map
@@ -86,6 +97,129 @@ class Scene_2D:
                     for i in range(len(line)):
                         if line[i] != "\n":
                             self.map[i][j - 1] = str(line[i])
+
+class Physic_Scene:
+    """Class representating a graphic scene (collection of physic object)
+    """
+
+    def __init__(self, advanced_struct: ad.Advanced_Struct, name: str, scene_size: tuple) -> None:
+        """Create a physic scene
+
+        Args:
+            advanced_struct (ad.Advanced_Struct): advanced structure of the game
+            name (str): name of the scene
+        """
+        self.advanced_struct = advanced_struct
+        self.map = {0: []}
+        self.name = name
+        self.objects = {}
+        self.scene_size = scene_size
+
+        self.fill(0, 0)
+
+    def add_object(self, name: str, object: ps.Physic_Object) -> None:
+        """Add an object to the scene
+
+        Args:
+            name (str): name of this object into the scene
+            object (ps.Physic_Object): physic object to add to the scene
+        """
+        if list(self.get_objects().keys()).count(name) <= 0:
+            self.get_objects()[name] = object
+            return
+        print("Matix physic scene : Warning !! The name \"" + name + "\" into the scene \"" + self.get_name() + "\" already exists.")
+
+    def fill(self, static: int, map_level: int = 0) -> None:
+        """Fill the maps with a static state
+
+        Args:
+            static (int): static state to fill the map
+            map_level (int, optional): level of the map to fill. Defaults to 0.
+        """
+        self.map[map_level].clear()
+        for j in range(self.get_scene_size()[1]):
+            map_line = []
+            for i in range(self.get_scene_size()[0]):
+                map_line.append(static)
+            self.map[map_level].append(map_line)
+
+    def get_advanced_struct(self) -> ad.Advanced_Struct:
+        """Return the advanced structure of the game
+
+        Return:
+            ad.Advanced_Struct: advanced structure of the game
+        """
+        return self.advanced_struct
+    
+    def get_base_struct(self) -> bs.Base_Struct:
+        """Return the base structure of the game
+
+        Returns:
+            bs.Base_Struct: base structure of the game
+        """
+        return self.get_advanced_struct().get_base_struct()
+    
+    def get_name(self) -> str:
+        """Return the name of the scene
+
+        Returns:
+            str: name of the scene
+        """
+        return self.name
+
+    def get_objects(self) -> dict:
+        """Return a dict of objects into the scene
+
+        Returns:
+            dict: dict of objects into the scene
+        """
+        return self.objects
+    
+    def get_scene_size(self) -> tuple:
+        """Return the size of the scene
+
+        Returns:
+            tuple: size of the scene
+        """
+        return self.scene_size
+
+    def load_from_2d_scene(self, scene: Scene_2D, parts: dict, map_level: int = 0) -> None:
+        """Load the physic map from a 2d scene
+
+        Args:
+            scene (Scene_2D): 2d scene used to laod the map
+            parts (dict): dict of usefull parts
+            map_level (int): map level to load
+        """
+        for j in range(scene.get_scene_size()[1]): # Load each part of the map
+            for i in range(scene.get_scene_size()[0]):
+                part = scene.get_part_at(i, j)
+                if list(parts.keys()).count(part) > 0: # If the part exists
+                    if parts[part] != "":
+                        static = parts[part].get_is_a_physic_static_object()
+                        if static:
+                            self.map[map_level][i][j] = ps.Physic_Static_Object(scene.get_objects()[i][j])
+                else: # If the part does not exist
+                    print("Matix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
+    
+    def new_object(self, name: str, object: bs.Transform_Object, weight: float = 1) -> ps.Physic_Object:
+        """Create a new object into the scene
+
+        Args:
+            name (str): name of this object into the scene
+            object (bs.Transform_Object): transform for the object
+        """
+        if list(self.get_objects().keys()).count(name) <= 0:
+            object = ps.Physic_Dynamic_Object(self.get_base_struct(), object, weight = weight)
+            self.add_object(name, object)
+            return object
+        print("Matix physic scene : Warning !! The name \"" + name + "\" you want to create into the scene \"" + self.get_name() + "\" already exists.")
+
+    def update(self) -> None:
+        """Update the physic scene
+        """
+        for object in list(self.get_objects().values()):
+            object.update()
 
 class Scene(bs.Transform_Object):
     """Class representing a scene (collection of object)
@@ -152,11 +286,13 @@ class Scene(bs.Transform_Object):
             for i in range(scene.get_scene_size()[0]):
                 part = scene.get_part_at(i, j)
                 if list(parts.keys()).count(part) > 0: # If the part exists
-                    texture_path = parts[part]
-                    if texture_path != "":
+                    if parts[part] != "":
+                        texture_path = parts[part].get_texture_path()
                         object = self.new_object(str(i) + ";" + str(j), "cube", position = (1 * i, 3, 1 * j), scale = (1, 5, 1), texture_path = texture_path)
+                        if list(scene.get_objects().keys()).count(i) <= 0: scene.get_objects()[i] = {}
+                        scene.get_objects()[i][j] = object
                 else: # If the part does not exist
-                    print("Matrix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
+                    print("Matix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
     
     def new_object(self, name: str, type: str, parent: bs.Transform_Object = None, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), texture_path: str = "") -> bs.Transform_Object:
         """Create a new object into the scene and return it

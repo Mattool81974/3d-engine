@@ -562,3 +562,37 @@ class HUD(Graphic_Object):
         self.on_render()
         self.vao.get_program().get_program()["m_model"].write(self.get_model_matrix())
         self.get_vao().render()
+
+class Part:
+    """Class representating a part/pattern of a map
+    """
+
+    def __init__(self, texture_path: str, is_a_physic_static_object: bool = True) -> None:
+        """Create a part of map
+        """
+        self.is_a_physic_static_object = is_a_physic_static_object
+        self.texture_path = texture_path
+
+    def get_is_a_physic_static_object(self) -> bool:
+        """Return if the object is a static part of a physic object
+
+        Returns:
+            bool: if the object is a static part of a physic object
+        """
+        return self.is_a_physic_static_object
+    
+    def get_texture_path(self) -> str:
+        """Return the path through the texture
+
+        Returns:
+            str: path through the texture
+        """
+        return self.texture_path
+    
+    def set_object(self, object: bs.Transform_Object) -> None:
+        """Change the value of the object
+
+        Args:
+            object (bs.Transform_Object): new value of the object
+        """
+        return self.object

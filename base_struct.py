@@ -418,6 +418,8 @@ class Base_Struct:
 
         self.camera_value = Camera_Value(self.get_window_size()[0] / self.get_window_size()[1])
 
+        self.gravity_force = -9.81
+
         self.texture_count = 128
 
     def get_camera_value(self) -> Camera_Value:
@@ -443,6 +445,14 @@ class Base_Struct:
             float: delta time in seconds
         """
         return self.delta_time
+    
+    def get_gravity_force(self) -> float:
+        """Return the force of the gravity into the game
+
+        Returns:
+            float: force of the gravity into the game
+        """
+        return self.gravity_force
     
     def get_mouse_rel_pos(self) -> tuple:
         """Return the relative pos of the mouse
