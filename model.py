@@ -462,11 +462,6 @@ class Graphic_Object(bs.Transform_Object):
         if scale_texture:
             self.texture_count_size[0] = scale
 
-    def update(self) -> None:
-        """Update the object during a frame
-        """
-        self.render()
-
 class Cube_Object(Graphic_Object):
     """Class representating a graphic cube, heritating from Graphics_Object
     """

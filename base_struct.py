@@ -37,6 +37,7 @@ class Transform_Object:
             rotation (tuple, optional): rotation of the plan. Defaults to (0, 0, 0).
             scale (tuple, optional): scale of the plan. Defaults to (0, 0, 0).
         """
+        self.fixed_position = (True, True, True)
         self.parent = parent
         self.position = (0, 0, 0)
         self.rotation = (0, 0, 0)
@@ -50,15 +51,15 @@ class Transform_Object:
         self.right = glm.vec3(1, 0, 0)
         self.up = glm.vec3(0, 1, 0)
 
-    def get_absolute_position(self) -> tuple:
+    def get_absolute_position(self, scaled: bool = False) -> tuple:
         """Return the absolute position of the object into the scene
 
         Returns:
             tuple: absolute position of the object into the scene
         """
-        position = self.get_position()
+        position = self.get_position(scaled)
         if self.get_parent() != None:
-            position = (position[0] + self.get_parent().get_absolute_position()[0], position[1] + self.get_parent().get_absolute_position()[1], position[2] + self.get_parent().get_absolute_position()[2])
+            position = (position[0] + self.get_parent().get_absolute_position(scaled)[0], position[1] + self.get_parent().get_absolute_position(scaled)[1], position[2] + self.get_parent().get_absolute_position(scaled)[2])
         return position
     
     def get_absolute_rotation(self) -> tuple:
@@ -71,6 +72,26 @@ class Transform_Object:
         if self.get_parent() != None:
             rotation = (rotation[0] + self.get_parent().get_absolute_rotation()[0], rotation[1] + self.get_parent().get_absolute_rotation()[1], rotation[2] + self.get_parent().get_absolute_rotation()[2])
         return rotation
+    
+    def get_absolute_scale(self) -> tuple:
+        """Return the absolute scale of the object into the scene
+
+        Returns:
+            tuple: absolute scale of the object into the scene
+        """
+        scale = self.get_scale()
+        if self.get_parent() != None:
+            parent_scale = self.get_parent().get_absolute_scale()
+            scale = (scale[0] * parent_scale[0], scale[1] * parent_scale[1], scale[2] * parent_scale[2])
+        return scale
+    
+    def get_fixed_position(self) -> tuple:
+        """Return the fixed position into the object
+
+        Returns:
+            tuple: fixed position into the object
+        """
+        return self.fixed_position
 
     def get_forward(self) -> glm.vec3:
         """Return the forward vector of the object
@@ -89,7 +110,7 @@ class Transform_Object:
 
         # Translation
         m_model = glm.mat4()
-        m_model = glm.translate(m_model, self.get_position())
+        m_model = glm.translate(m_model, self.get_absolute_position(True))
 
         # Rotation
         m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[0]), glm.vec3(1, 0, 0))
@@ -97,10 +118,8 @@ class Transform_Object:
         m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[2]), glm.vec3(0, 0, 1))
 
         # Scaling
-        m_model = glm.scale(m_model, self.get_scale())
+        m_model = glm.scale(m_model, self.get_absolute_scale())
 
-        if self.get_parent() != None:
-            m_model += self.get_parent().get_model_matrix()
         return m_model
     
     def get_parent(self):
@@ -108,13 +127,17 @@ class Transform_Object:
         """
         return self.parent
 
-    def get_position(self) -> tuple:
+    def get_position(self, scaled: bool = False) -> tuple:
         """Return the position of the object
 
         Returns:
             tuple: position of the object
         """
-        return self.position
+        position = self.position
+        if scaled and self.get_parent() != None:
+            parent_scale = self.get_parent().get_scale()
+            position = (position[0] * parent_scale[0], position[1] * parent_scale[1], position[2] * parent_scale[2])
+        return position
     
     def get_right(self) -> glm.vec3:
         """Return the right vector of the object
@@ -155,8 +178,11 @@ class Transform_Object:
             translation (tuple): vector 3d of the translation
         """
         x_transform = translation[0]
+        if not self.get_fixed_position()[0]: x_transform = 0
         y_transform = translation[1]
+        if not self.get_fixed_position()[1]: y_transform = 0
         z_transform = translation[2]
+        if not self.get_fixed_position()[2]: z_transform = 0
         self.set_position((self.get_position()[0] + x_transform, self.get_position()[1] + y_transform, self.get_position()[2] + z_transform))
 
     def rotate(self, rotation: tuple) -> None:
@@ -171,6 +197,14 @@ class Transform_Object:
 
         self.set_rotation((self.get_rotation()[0] + x_rotation, self.get_rotation()[1] + y_rotation, self.get_rotation()[2] + z_rotation))
         self.update_vectors()
+
+    def set_fixed_position(self, fixed_position: tuple) -> None:
+        """Change the value of the fixed position
+
+        Args:
+            fixed_position (tuple): new value of the fixed position
+        """
+        self.fixed_position = fixed_position
 
     def set_position(self, position: tuple) -> None:
         """Change the position of the object

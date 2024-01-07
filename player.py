@@ -129,3 +129,4 @@ class Player(bs.Transform_Object):
         self.handle_player_rotation()
         self.camera.update()
         self.hud.update()
+        self.hud.render()

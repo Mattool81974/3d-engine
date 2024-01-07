@@ -3,6 +3,7 @@ import advanced_struct as ad
 import base_struct as bs
 import model
 import moderngl as mgl
+import os
 import player as pl
 import pygame as pg
 import scene as sc
@@ -15,43 +16,61 @@ class Game:
     def __init__(self) -> None:
         """Create a main game
         """
-        WINDOW_SIZE = (1600, 900)
 
+        # Initialize pygame OpenGL context
+        WINDOW_SIZE = (1600, 900)
         pg.init()
+
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MAJOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_COMPATIBILITY)
-
         self.window = pg.display.set_mode(WINDOW_SIZE, flags=pg.OPENGL | pg.DOUBLEBUF)
-
         pg.event.set_grab(True)
         pg.mouse.set_visible(False)
 
+        # Initialize games structures
         self.base_struct = bs.Base_Struct(mgl.create_context(), WINDOW_SIZE)
-
         self.advanced_struct = ad.Advanced_Struct(self.get_base_struct())
         self.clock = pg.time.Clock()
 
-        self.player = pl.Player(self.get_advanced_struct(), position = (0, 2, 0))
-        self.scene = sc.Scene(self.get_advanced_struct())
+        # Initialize games variables
+        self.current_scene = ""
+        self.parts = {"0": ""}
+        self.player = pl.Player(self.get_advanced_struct(), position = (0, 4, 0))
+        #self.player.set_fixed_position((True, False, True))
+        self.scenes = {}
 
-        self.scene.new_object("sol", "cube", scale = (27, 1, 27))
-        self.scene.new_object("mur1", "cube", position = (13, 3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
-        self.scene.new_object("mur2", "cube", position = (0, 3, 13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
-        self.scene.new_object("mur3", "cube", position = (-13, 3, 0), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble")
-        self.scene.new_object("mur4", "cube", position = (0, 3, -13), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble")
+    def add_scene(self, name: str, scene: sc.Scene) -> None:
+        """Add a scene into the game
 
-        sc2d = sc.Scene_2D((25, 25))
-        sc2d.load_map("maps/level0.txt")
-        for j in range(sc2d.get_scene_size()[1]):
-            for i in range(sc2d.get_scene_size()[0]):
-                if sc2d.get_part_at(i, j) == 1:
-                    self.scene.new_object(str(i) + ";" + str(j), "cube", position = (12 - 1 * i, 3, 12 - 1 * j), scale = (1, 5, 1), texture_path = "textures/cobble")
+        Args:
+            name (str): name of the scene into the game
+            scene (sc.Scene): scene to add into the game
+        """
+        if list(self.scenes.keys()).count(name) <= 0:
+            self.scenes[name] = scene
+            return
+        print("Matrix game : Warning !! The name \"" + name + " \" for the scene you want to add is already used.")
+        return None
+    
+    def assign_map_part(self, name: str, texture_path: str) -> None:
+        """Assign to the name "name" a texture for a part into a map
+
+        Args:
+            name (str): name of the part
+            texture_path (str): texture path of the part
+        """
+        if list(self.get_parts().keys()).count(name) <= 0:
+            self.get_parts()[name] = texture_path
+            return
+        print("Matrix game : Warning !! The name \"" + name + " \" you try to assign for a part already exist.")
+        return
 
     def destroy(self) -> None:
         """Destroy and end the game
         """
-        self.get_scene().destroy()
+        for scene in list(self.get_scenes().values()):
+            scene.destroy()
         pg.quit()
         sys.exit()
 
@@ -79,6 +98,22 @@ class Game:
         """
         return self.clock
     
+    def get_current_scene(self) -> str:
+        """Return the current scene of the game
+
+        Returns:
+            str: _current scene of the game
+        """
+        return self.current_scene
+    
+    def get_parts(self) -> dict:
+        """Return the parts assigned into the game
+
+        Returns:
+            dict: parts assigned into the game
+        """
+        return self.parts
+    
     def get_player(self) -> pl.Player:
         """Return the player into the game
 
@@ -87,13 +122,13 @@ class Game:
         """
         return self.player
     
-    def get_scene(self) -> sc.Scene:
-        """Return the scene rendered
+    def get_scenes(self) -> dict:
+        """Return a dict with all the scenes
 
         Returns:
-            sc.Scene: scene rendered
+            dict: dict with all the scenes
         """
-        return self.scene
+        return self.scenes
 
     def handle_events(self) -> None:
         """Handle all the events
@@ -102,6 +137,34 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT: #If the user wants to leave the game
                 self.destroy()
+
+    def new_scene(self, name: str, map_path: str = "") -> sc.Scene:
+        """Create a new scene and return the scene
+
+        Args:
+            name (str): name of the scene into the game
+            map_path (str, optional): path of the map into the scene. Defaults to "".
+
+        Returns:
+            sc.Scene: new scene created
+        """
+        if list(self.scenes.keys()).count(name) <= 0: # If the name does not exist
+            scene = sc.Scene(self.get_advanced_struct(), name)
+            self.add_scene(name, scene)
+
+            if map_path != "": # Load the map into the scene
+                if os.path.exists(map_path):
+                    map_extension = map_path.split(".")[-1]
+                    if map_extension == "wad":
+                        sc2d = sc.Scene_2D((25, 25))
+                        sc2d.load_map(map_path)
+                        scene.load_from_2d_scene(sc2d, self.get_parts())
+                else: # If the map does not exist
+                    print("Matrix game : Warning !! The map \"" + map_path + " \" for loading into the scene \"" + name + "\" does not exist.")
+
+            return scene
+        print("Matrix game : Warning !! The name \"" + name + " \" for the scene you want to create is already used.") # If the name already exists
+        return None
 
     def run(self) -> None:
         """Run the game
@@ -112,12 +175,24 @@ class Game:
             delta_time = self.get_clock().tick(5000) * 0.001
             self.get_base_struct().set_delta_time(delta_time)
 
+    def set_current_scene(self, scene: str) -> None:
+        """Change the current scene
+
+        Args:
+            scene (str): name of the new current scene
+        """
+        if list(self.scenes.keys()).count(scene) > 0:
+            self.current_scene = scene
+            return
+        print("Matrix game : Warning !! The scene \"" + scene + " \" which you want to be the current scene does not exist.")
+        return
+
     def update(self) -> None:
         """Update the screen
         """
         self.get_base_struct().get_context().clear(255, 255, 255)
-        self.get_scene().update()
-        self.get_scene().render()
+        self.get_scenes()[self.get_current_scene()].update()
+        self.get_scenes()[self.get_current_scene()].render()
         self.get_player().update()
         surface = pg.Surface((100, 100))
         surface.fill((0, 0, 0))
