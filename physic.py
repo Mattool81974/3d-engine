@@ -2,7 +2,15 @@
 import base_struct as bs
 import glm
 
-class Square_Collision:
+class Collision:
+    """Class representating a collision
+    """
+
+    def __init__(self) -> None:
+        """Create a collision
+        """
+
+class Square_Collision(Collision):
     """Class representating a square-shaped collision
     """
 
@@ -14,10 +22,19 @@ class Physic_Object:
     """Class representating a physic object
     """
 
-    def __init__(self, transform: bs.Transform_Object) -> None:
+    def __init__(self, transform: bs.Transform_Object, collision: Collision = None) -> None:
         """Create a physic object
         """
+        self.collision = collision
         self.transform = transform
+
+    def get_collision(self) -> Collision:
+        """Return the collision of the object
+
+        Returns:
+            Collision: collision of the object
+        """
+        return self.collision
 
     def get_transform(self) -> bs.Transform_Object:
         """Return the transform object of the physic object
@@ -31,20 +48,20 @@ class Physic_Static_Object(Physic_Object):
     """Class representating a static physic object, heritating from Physic_Object
     """
 
-    def __init__(self, transform: bs.Transform_Object) -> None:
+    def __init__(self, transform: bs.Transform_Object, collision: Collision = None) -> None:
         """Create a static physic object
         """
-        super().__init__(transform)
+        super().__init__(transform, collision)
         self.resistance = -1
 
 class Physic_Dynamic_Object(Physic_Object):
     """Class representating a dynamic physic object, heritating from Physic_Object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, transform: bs.Transform_Object, weight: float = 1) -> None:
+    def __init__(self, base_struct: bs.Base_Struct, transform: bs.Transform_Object, collision: Collision = None, weight: float = 1) -> None:
         """Create a dynamic physic object
         """
-        super().__init__(transform)
+        super().__init__(transform, collision)
         self.base_struct = base_struct
         self.gravity_force = 1
         self.movement = (0, 0, 0)

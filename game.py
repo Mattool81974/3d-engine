@@ -58,15 +58,16 @@ class Game:
         print("Matrix game : Warning !! The name \"" + name + " \" for the scene you want to add is already used.")
         return None
     
-    def assign_map_part(self, name: str, texture_path: str) -> None:
+    def assign_map_part(self, name: str, texture_path: str, type: str = "cube") -> None:
         """Assign to the name "name" a texture for a part into a map
 
         Args:
             name (str): name of the part
             texture_path (str): texture path of the part
+            type (str): type of the part
         """
         if list(self.get_parts().keys()).count(name) <= 0:
-            self.get_parts()[name] = model.Part(texture_path)
+            self.get_parts()[name] = model.Part(texture_path, type)
             return
         print("Matrix game : Warning !! The name \"" + name + " \" you try to assign for a part already exist.")
         return
@@ -167,29 +168,6 @@ class Game:
         #self.player.set_fixed_position((True, False, True))
         self.scenes = {}
 
-    def new_physic_scene(self, name: str, scene2D: sc.Scene_2D = None, scene_size: tuple = (25, 25)) -> tuple:
-        """Create a new physic scene and return the scene
-
-        Args:
-            name (str): name of the scene into the game
-            map_path (str, optional): path of the map into the scene. Defaults to "".
-            scene_size (tuple, optional): size of the scene. Defaults to (25, 25).
-
-        Returns:
-            sc.Physic_Scene: new scene created
-        """
-        if list(self.get_physics_scenes().keys()).count(name) <= 0: # If the name does not exist
-            scene = sc.Physic_Scene(self.get_advanced_struct(), name, scene_size)
-            scene2D = None
-            self.add_physic_scene(name, scene)
-
-            if scene2D != None: # Load the map into the scene
-                scene.load_from_2d_scene(scene2D, self.get_parts())
-
-            return scene
-        print("Matrix game : Warning !! The name \"" + name + " \" for the physic scene you want to create is already used.") # If the name already exists
-        return None
-
     def new_scene(self, name: str, map_path: str = "") -> sc.Scene:
         """Create a new scene and return the scene
 
@@ -215,9 +193,9 @@ class Game:
                 else: # If the map does not exist
                     print("Matrix game : Warning !! The map \"" + map_path + " \" for loading into the scene \"" + name + "\" does not exist.")
 
-            return (scene, scene2D)
+            return scene
         print("Matrix game : Warning !! The name \"" + name + " \" for the scene you want to create is already used.") # If the name already exists
-        return (None, None)
+        return None
 
     def run(self) -> None:
         """Run the game
@@ -244,12 +222,9 @@ class Game:
         """Update the screen
         """
         self.get_base_struct().get_context().clear(255, 255, 255)
+        self.get_player().update()
         if list(self.get_scenes().keys()).count(self.get_current_scene()) > 0:
             self.get_scenes()[self.get_current_scene()].update()
-        if list(self.get_physics_scenes().keys()).count(self.get_current_scene()) > 0:
-            self.get_physics_scenes()[self.get_current_scene()].update()
-        self.get_scenes()[self.get_current_scene()].render()
-        self.get_player().update()
         surface = pg.Surface((100, 100))
         surface.fill((0, 0, 0))
         self.window.blit(surface, (50, 50))

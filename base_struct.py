@@ -419,7 +419,7 @@ class Base_Struct:
 
         self.camera_value = Camera_Value(self.get_window_size()[0] / self.get_window_size()[1])
 
-        self.gravity_force = -9.81
+        self.gravity_force = -9.81 * 0
 
         self.texture_count = 128
 

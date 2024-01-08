@@ -375,11 +375,11 @@ class Texture:
         texture.use(self.get_bind_number())
         return texture
 
-class Graphic_Object(bs.Transform_Object):
+class Graphic_Object:
     """Class representating a graphic object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, texture: Texture, vbo: VBO, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0), shader_path = "shaders/triangle", texture_count_size: tuple = (1, 1), type: str = "graphic", do_on_init = True) -> None:
+    def __init__(self, base_struct: bs.Base_Struct, texture: Texture, transform: bs.Transform_Object, vbo: VBO, shader_path = "shaders/triangle", texture_count_size: tuple = (1, 1), type: str = "graphic", do_on_init = True) -> None:
         """Create a graphic object
 
         Args:
@@ -388,10 +388,9 @@ class Graphic_Object(bs.Transform_Object):
             rotation (tuple, optional): rotation of the plan. Defaults to (0, 0, 0).
             type (str, optional): type of the object. Defaults to "graphic".
         """
-        super().__init__(parent, position, rotation, scale)
-
         self.base_struct = base_struct
         self.texture_count_size = [texture_count_size]
+        self.transform = transform
         self.type = type
 
         self.texture = [texture]
@@ -421,6 +420,14 @@ class Graphic_Object(bs.Transform_Object):
         """
         return self.texture_count_size
     
+    def get_transform(self) -> bs.Transform_Object:
+        """Return the transform object of this graphic object
+
+        Returns:
+            bs.Transform_Object: transform object of this graphic object
+        """
+        return self.transform
+    
     def get_type(self) -> str:
         """Return the type of the object
 
@@ -448,7 +455,7 @@ class Graphic_Object(bs.Transform_Object):
     def on_init(self) -> None:
         """Init the uniform variables into the shader
         """
-        self.get_vao().get_program().get_program()["m_model"].write(self.get_model_matrix())
+        self.get_vao().get_program().get_program()["m_model"].write(self.get_transform().get_model_matrix())
         self.get_vao().get_program().get_program()["m_proj"].write(self.get_base_struct().get_camera_value().get_projection())
         self.get_vao().get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
         self.get_vao().get_program().get_program()["u_texture_0"] = self.get_base_struct().get_texture_count()
@@ -465,7 +472,7 @@ class Graphic_Object(bs.Transform_Object):
         """Render the model
         """
         self.on_render()
-        self.vao.get_program().get_program()["m_model"].write(self.get_model_matrix())
+        self.vao.get_program().get_program()["m_model"].write(self.get_transform().get_model_matrix())
         self.vao.get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
         self.get_vao().render()
 
@@ -480,11 +487,15 @@ class Graphic_Object(bs.Transform_Object):
         if scale_texture:
             self.texture_count_size[0] = scale
 
+    def update(self) -> None:
+        """Update the graphic object
+        """
+
 class Cube_Object(Graphic_Object):
     """Class representating a graphic cube, heritating from Graphics_Object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, texture: list, vbo: VBO, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (0, 0, 0), scale_texture: bool = True, shader_path: str = "shaders/cube", texture_count_size: list = ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)), type: str = "cube") -> None:
+    def __init__(self, base_struct: bs.Base_Struct, texture: list, transform: bs.Transform_Object, vbo: VBO, scale_texture: bool = True, shader_path: str = "shaders/cube", texture_count_size: list = ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)), type: str = "cube") -> None:
         """Create a graphics cube
 
         Args:
@@ -497,12 +508,11 @@ class Cube_Object(Graphic_Object):
             type (str, optional): tpe fo the cube. Defaults to "cube".
         """
         self.scale_texture = scale_texture
-        super().__init__(base_struct, texture[0], vbo, parent, position, rotation, (1, 1, 1), shader_path, texture_count_size[0], type, False)
+        super().__init__(base_struct, texture[0], transform, vbo, shader_path, texture_count_size[0], type, False)
 
         for i in range(1, 6):
             self.texture.append(texture[i])
             self.texture_count_size.append(texture_count_size[i])
-        self.set_scale(scale)
         self.on_init()
 
     def get_scale_texture(self) -> bool:
@@ -516,7 +526,7 @@ class Cube_Object(Graphic_Object):
     def on_init(self) -> None:
         """Init the uniform variables into the shader
         """
-        self.get_vao().get_program().get_program()["m_model"].write(self.get_model_matrix())
+        self.get_vao().get_program().get_program()["m_model"].write(self.get_transform().get_model_matrix())
         self.get_vao().get_program().get_program()["m_proj"].write(self.get_base_struct().get_camera_value().get_projection())
         self.get_vao().get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
         for t in range(len(self.texture)):
@@ -530,17 +540,17 @@ class Cube_Object(Graphic_Object):
             scale (tuple): scale of the object
         """
         if self.get_scale_texture():
-            if self.get_scale()[0] != scale[0]:
+            if self.get_transform().get_scale()[0] != scale[0]:
                 self.texture_count_size[self.get_vbo().get_face_order()[0]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][1])
                 self.texture_count_size[self.get_vbo().get_face_order()[2]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[2]][1])
                 self.texture_count_size[self.get_vbo().get_face_order()[4]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[4]][0])
                 self.texture_count_size[self.get_vbo().get_face_order()[5]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[5]][0])
-            if self.get_scale()[1] != scale[1]:
+            if self.get_transform().get_scale()[1] != scale[1]:
                 self.texture_count_size[self.get_vbo().get_face_order()[0]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
                 self.texture_count_size[self.get_vbo().get_face_order()[1]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
                 self.texture_count_size[self.get_vbo().get_face_order()[2]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
                 self.texture_count_size[self.get_vbo().get_face_order()[3]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
-            if self.get_scale()[2] != scale[2]:
+            if self.get_transform().get_scale()[2] != scale[2]:
                 self.texture_count_size[self.get_vbo().get_face_order()[1]] = (scale[2], self.get_texture_count_size()[self.get_vbo().get_face_order()[1]][1])
                 self.texture_count_size[self.get_vbo().get_face_order()[3]] = (scale[2], self.get_texture_count_size()[self.get_vbo().get_face_order()[3]][1])
                 self.texture_count_size[self.get_vbo().get_face_order()[4]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[4]][0], scale[2])
@@ -564,8 +574,9 @@ class HUD(Graphic_Object):
             type (str, optional): tpe fo the cube. Defaults to "cube".
             do_on_init (bool, optional): boolean if the super() do the init. Defaults to True.
         """
+        self.transform = bs.Transform_Object(None, (0, 0, 0), (0, 0, 0), (1, 1, 1))
         self.texture = Texture(base_struct, texture)
-        super().__init__(base_struct, self.texture, vbo, None, (0, 0, 0), (0, 0, 0), (1, 1, 1), shader_path, (1, 1), type, True)
+        super().__init__(base_struct, self.texture, self.get_transform(), vbo, shader_path, (1, 1), type, True)
 
     def on_init(self) -> None:
         """Init the uniform variables into the shader
@@ -578,18 +589,19 @@ class HUD(Graphic_Object):
         """Render the HUD into the screen
         """
         self.on_render()
-        self.vao.get_program().get_program()["m_model"].write(self.get_model_matrix())
+        self.vao.get_program().get_program()["m_model"].write(self.get_transform().get_model_matrix())
         self.get_vao().render()
 
 class Part:
     """Class representating a part/pattern of a map
     """
 
-    def __init__(self, texture_path: str, is_a_physic_static_object: bool = True) -> None:
+    def __init__(self, texture_path: str, type: str, is_a_physic_static_object: bool = True) -> None:
         """Create a part of map
         """
         self.is_a_physic_static_object = is_a_physic_static_object
         self.texture_path = texture_path
+        self.type = type
 
     def get_is_a_physic_static_object(self) -> bool:
         """Return if the object is a static part of a physic object
@@ -606,6 +618,14 @@ class Part:
             str: path through the texture
         """
         return self.texture_path
+    
+    def get_type(self) -> str:
+        """Return the type of the part
+
+        Returns:
+            str: type of the part
+        """
+        return self.type
     
     def set_object(self, object: bs.Transform_Object) -> None:
         """Change the value of the object

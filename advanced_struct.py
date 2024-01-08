@@ -12,6 +12,7 @@ class Advanced_Struct:
     def __init__(self, base_struct: bs.Base_Struct) -> None:
         """Create an advanced struct class
         """
+        self.all_textures = {}
         self.all_vbos = {}
         self.base_struct = base_struct
 
@@ -23,11 +24,19 @@ class Advanced_Struct:
         self.all_vbos["plan"] = plan_vbo
         self.all_vbos["square"] = square_vbo
 
-    def get_all_vbos(self) -> list:
-        """Return a list of alls the VBOs
+    def get_all_textures(self) -> dict:
+        """Return a dict of alls the textures
 
         Returns:
-            list: list of alls the VBOs
+            dict: dict of alls the textures
+        """
+        return self.all_textures
+
+    def get_all_vbos(self) -> dict:
+        """Return a dict of alls the VBOs
+
+        Returns:
+            dict: dict of alls the VBOs
         """
         return self.all_vbos
 
