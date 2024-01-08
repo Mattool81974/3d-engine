@@ -30,16 +30,7 @@ class Game:
 
         # Initialize games structures
         self.base_struct = bs.Base_Struct(mgl.create_context(), WINDOW_SIZE)
-        self.advanced_struct = ad.Advanced_Struct(self.get_base_struct())
         self.clock = pg.time.Clock()
-
-        # Initialize games variables
-        self.current_scene = ""
-        self.parts = {"0": ""}
-        self.physic_scenes = {}
-        self.player = pl.Player(self.get_advanced_struct(), position = (0, 4, 0))
-        #self.player.set_fixed_position((True, False, True))
-        self.scenes = {}
 
     def add_physic_scene(self, name: str, scene: sc.Physic_Scene) -> None:
         """Add a physic scene into the game
@@ -159,6 +150,22 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT: #If the user wants to leave the game
                 self.destroy()
+    
+    def load_advanced_struct(self) -> None:
+        """Start the game
+        """
+        self.advanced_struct = ad.Advanced_Struct(self.get_base_struct())
+
+    def load_elements(self) -> None:
+        """Load main elements in the game
+        """
+        # Initialize games variables
+        self.current_scene = ""
+        self.parts = {"0": ""}
+        self.physic_scenes = {}
+        self.player = pl.Player(self.get_advanced_struct(), position = (0, 4, 0))
+        #self.player.set_fixed_position((True, False, True))
+        self.scenes = {}
 
     def new_physic_scene(self, name: str, scene2D: sc.Scene_2D = None, scene_size: tuple = (25, 25)) -> tuple:
         """Create a new physic scene and return the scene

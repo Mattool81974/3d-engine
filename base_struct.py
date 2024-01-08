@@ -413,6 +413,7 @@ class Base_Struct:
         self.context = context
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE | mgl.BLEND)
         self.delta_time = 0
+        self.face_order = {"cube": [0, 1, 2, 3, 4, 5]}
         self.mouse_rel_pos = (0, 0)
         self.window_size = window_size
 
@@ -445,6 +446,14 @@ class Base_Struct:
             float: delta time in seconds
         """
         return self.delta_time
+    
+    def get_face_order(self) -> dict:
+        """Return the dict of the face order for every model
+
+        Returns:
+            dict: dict of the face order for every model
+        """
+        return self.face_order
     
     def get_gravity_force(self) -> float:
         """Return the force of the gravity into the game

@@ -196,10 +196,19 @@ class Cube_VBO(VBO):
         Args:
             base_struct (bs.Base_Struct): base struct in the game
         """
+        self.face_order = base_struct.get_face_order()["cube"]
         super().__init__(base_struct)
 
         self.attributes = ["in_texcoord_0", "in_position", "in_face"]
         self.format = "2f 3f f"
+
+    def get_face_order(self) -> list:
+        """Return the order of the face
+
+        Return:
+            list: order of the face
+        """
+        return self.face_order
     
     def get_vertex_data(self):
         """Return the data with the vertex
@@ -224,7 +233,7 @@ class Cube_VBO(VBO):
         tex_coord_data = self.get_data(tex_coord_vertices, tex_coord_indices)
 
         face = []
-        for i in range(6):
+        for i in self.get_face_order():
             for _ in range(6):
                 face.append((i,))
         face = np.array(face, dtype="f")
@@ -387,6 +396,7 @@ class Graphic_Object(bs.Transform_Object):
 
         self.texture = [texture]
         self.vao = VAO(vbo, self.get_base_struct(), shader_path)
+        self.vbo = vbo
 
         if do_on_init: self.on_init()
 
@@ -426,6 +436,14 @@ class Graphic_Object(bs.Transform_Object):
             VAO: vao of the model
         """
         return self.vao
+    
+    def get_vbo(self) -> VBO:
+        """Return the vbo of the model
+
+        Returns:
+            VBO: vbo of the model
+        """
+        return self.vbo
     
     def on_init(self) -> None:
         """Init the uniform variables into the shader
@@ -513,20 +531,20 @@ class Cube_Object(Graphic_Object):
         """
         if self.get_scale_texture():
             if self.get_scale()[0] != scale[0]:
-                self.texture_count_size[0] = (scale[0], self.get_texture_count_size()[0][1])
-                self.texture_count_size[2] = (scale[0], self.get_texture_count_size()[2][1])
-                self.texture_count_size[4] = (scale[0], self.get_texture_count_size()[4][0])
-                self.texture_count_size[5] = (scale[0], self.get_texture_count_size()[5][0])
+                self.texture_count_size[self.get_vbo().get_face_order()[0]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][1])
+                self.texture_count_size[self.get_vbo().get_face_order()[2]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[2]][1])
+                self.texture_count_size[self.get_vbo().get_face_order()[4]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[4]][0])
+                self.texture_count_size[self.get_vbo().get_face_order()[5]] = (scale[0], self.get_texture_count_size()[self.get_vbo().get_face_order()[5]][0])
             if self.get_scale()[1] != scale[1]:
-                self.texture_count_size[0] = (self.get_texture_count_size()[0][0], scale[1])
-                self.texture_count_size[1] = (self.get_texture_count_size()[0][0], scale[1])
-                self.texture_count_size[2] = (self.get_texture_count_size()[0][0], scale[1])
-                self.texture_count_size[3] = (self.get_texture_count_size()[0][0], scale[1])
+                self.texture_count_size[self.get_vbo().get_face_order()[0]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
+                self.texture_count_size[self.get_vbo().get_face_order()[1]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
+                self.texture_count_size[self.get_vbo().get_face_order()[2]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
+                self.texture_count_size[self.get_vbo().get_face_order()[3]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[0]][0], scale[1])
             if self.get_scale()[2] != scale[2]:
-                self.texture_count_size[1] = (scale[2], self.get_texture_count_size()[1][1])
-                self.texture_count_size[3] = (scale[2], self.get_texture_count_size()[3][1])
-                self.texture_count_size[4] = (self.get_texture_count_size()[4][0], scale[2])
-                self.texture_count_size[5] = (self.get_texture_count_size()[5][0], scale[2])
+                self.texture_count_size[self.get_vbo().get_face_order()[1]] = (scale[2], self.get_texture_count_size()[self.get_vbo().get_face_order()[1]][1])
+                self.texture_count_size[self.get_vbo().get_face_order()[3]] = (scale[2], self.get_texture_count_size()[self.get_vbo().get_face_order()[3]][1])
+                self.texture_count_size[self.get_vbo().get_face_order()[4]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[4]][0], scale[2])
+                self.texture_count_size[self.get_vbo().get_face_order()[5]] = (self.get_texture_count_size()[self.get_vbo().get_face_order()[5]][0], scale[2])
         
         self.scale = scale
 

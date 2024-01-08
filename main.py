@@ -4,6 +4,12 @@ import scene as sc
 
 jeu = game.Game()
 
+# Configure some thing into the game
+base_struct = jeu.get_base_struct()
+#base_struct.face_order["cube"] = [0, 1, 3, 4, 2, 5] # Don't touch this
+jeu.load_advanced_struct()
+jeu.load_elements()
+
 # Load maps part
 jeu.assign_map_part("1", "textures/concrete_wall")
 jeu.assign_map_part("2", "textures/concrete_pillar")
