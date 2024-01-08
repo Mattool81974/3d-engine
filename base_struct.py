@@ -193,7 +193,6 @@ class Transform_Object:
         z_transform = translation[2]
         if self.get_fixed_position()[2]: z_transform = 0
         self.movement = (self.get_movement()[0] + x_transform, self.get_movement()[1] + y_transform, self.get_movement()[2] + z_transform)
-        print("D", self.get_movement())
 
     def rotate(self, rotation: tuple) -> None:
         """Rotate the object
@@ -243,7 +242,6 @@ class Transform_Object:
     def soft_reset(self) -> None:
         """Reset the one-frame long object attributes values
         """
-        print("E", self.get_movement())
         self.set_position((self.get_position()[0] + self.get_movement()[0], self.get_position()[1] + self.get_movement()[1], self.get_position()[2] + self.get_movement()[2]))
         self.movement = (0, 0, 0)
 
