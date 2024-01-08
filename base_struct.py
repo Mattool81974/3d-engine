@@ -37,7 +37,8 @@ class Transform_Object:
             rotation (tuple, optional): rotation of the plan. Defaults to (0, 0, 0).
             scale (tuple, optional): scale of the plan. Defaults to (0, 0, 0).
         """
-        self.fixed_position = (True, True, True)
+        self.fixed_position = (False, False, False)
+        self.movement = (0, 0, 0)
         self.parent = parent
         self.position = (0, 0, 0)
         self.rotation = (0, 0, 0)
@@ -122,6 +123,14 @@ class Transform_Object:
 
         return m_model
     
+    def get_movement(self) -> tuple:
+        """Return the movement for this frame
+
+        Returns:
+            tuple: movement for this frame
+        """
+        return self.movement
+
     def get_parent(self):
         """Return the parent of the object
         """
@@ -178,12 +187,13 @@ class Transform_Object:
             translation (tuple): vector 3d of the translation
         """
         x_transform = translation[0]
-        if not self.get_fixed_position()[0]: x_transform = 0
+        if self.get_fixed_position()[0]: x_transform = 0
         y_transform = translation[1]
-        if not self.get_fixed_position()[1]: y_transform = 0
+        if self.get_fixed_position()[1]: y_transform = 0
         z_transform = translation[2]
-        if not self.get_fixed_position()[2]: z_transform = 0
-        self.set_position((self.get_position()[0] + x_transform, self.get_position()[1] + y_transform, self.get_position()[2] + z_transform))
+        if self.get_fixed_position()[2]: z_transform = 0
+        self.movement = (self.get_movement()[0] + x_transform, self.get_movement()[1] + y_transform, self.get_movement()[2] + z_transform)
+        print("D", self.get_movement())
 
     def rotate(self, rotation: tuple) -> None:
         """Rotate the object
@@ -230,6 +240,13 @@ class Transform_Object:
         """
         self.scale = scale
     
+    def soft_reset(self) -> None:
+        """Reset the one-frame long object attributes values
+        """
+        print("E", self.get_movement())
+        self.set_position((self.get_position()[0] + self.get_movement()[0], self.get_position()[1] + self.get_movement()[1], self.get_position()[2] + self.get_movement()[2]))
+        self.movement = (0, 0, 0)
+
     def update(self) -> None:
         """Update the object
         """

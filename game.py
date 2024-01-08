@@ -222,9 +222,10 @@ class Game:
         """Update the screen
         """
         self.get_base_struct().get_context().clear(255, 255, 255)
-        self.get_player().update()
         if list(self.get_scenes().keys()).count(self.get_current_scene()) > 0:
             self.get_scenes()[self.get_current_scene()].update()
+        self.get_player().update()
+        self.get_player().soft_reset()
         surface = pg.Surface((100, 100))
         surface.fill((0, 0, 0))
         self.window.blit(surface, (50, 50))

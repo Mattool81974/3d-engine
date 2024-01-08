@@ -22,11 +22,20 @@ class Physic_Object:
     """Class representating a physic object
     """
 
-    def __init__(self, transform: bs.Transform_Object, collision: Collision = None) -> None:
+    def __init__(self, base_struct: bs.Base_Struct, transform: bs.Transform_Object, collision: Collision = None) -> None:
         """Create a physic object
         """
+        self.base_struct = base_struct
         self.collision = collision
         self.transform = transform
+
+    def get_base_struct(self) -> bs.Base_Struct:
+        """Return the base struct of the game
+
+        Returns:
+            bs.Base_Struct: base struct of the game
+        """
+        return self.base_struct
 
     def get_collision(self) -> Collision:
         """Return the collision of the object
@@ -43,15 +52,19 @@ class Physic_Object:
             bs.Transform_Object: transform object of the physic object
         """
         return self.transform
+    
+    def update(self) -> None:
+        """Update the object
+        """
 
 class Physic_Static_Object(Physic_Object):
     """Class representating a static physic object, heritating from Physic_Object
     """
 
-    def __init__(self, transform: bs.Transform_Object, collision: Collision = None) -> None:
+    def __init__(self, base_struct: bs.Base_Struct, transform: bs.Transform_Object, collision: Collision = None) -> None:
         """Create a static physic object
         """
-        super().__init__(transform, collision)
+        super().__init__(base_struct, transform, collision)
         self.resistance = -1
 
 class Physic_Dynamic_Object(Physic_Object):
@@ -61,8 +74,7 @@ class Physic_Dynamic_Object(Physic_Object):
     def __init__(self, base_struct: bs.Base_Struct, transform: bs.Transform_Object, collision: Collision = None, weight: float = 1) -> None:
         """Create a dynamic physic object
         """
-        super().__init__(transform, collision)
-        self.base_struct = base_struct
+        super().__init__(base_struct, transform, collision)
         self.gravity_force = 1
         self.movement = (0, 0, 0)
         self.weight = weight
@@ -78,14 +90,6 @@ class Physic_Dynamic_Object(Physic_Object):
         divisor = force / self.get_weight()
         self.set_movement((self.get_movement()[0] + vector[0] * divisor, self.get_movement()[1] + vector[1] * divisor, self.get_movement()[2] + vector[2] * divisor))
 
-    def get_base_struct(self) -> bs.Base_Struct:
-        """Return the base struct of the game
-
-        Returns:
-            bs.Base_Struct: base struct of the game
-        """
-        return self.base_struct
-    
     def get_gravity_force(self) -> float:
         """Return the gravity force for this object
 

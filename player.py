@@ -43,7 +43,7 @@ class Camera(bs.Transform_Object):
         self.rotate((0, 0, -rel_y * self.get_camera_value().get_SENSITIVITY()))
 
         self.get_camera_value().set_yaw(self.get_absolute_rotation()[0])
-        self.get_camera_value().set_pitch(self.get_absolute_rotation()[1])
+        self.get_camera_value().set_pitch(self.get_absolute_rotation()[2])
         self.get_camera_value().set_pitch(max(-89, min(89, self.get_camera_value().get_pitch())))
 
     def handle_camera_vectors(self):
