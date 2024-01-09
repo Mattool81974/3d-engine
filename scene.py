@@ -2,6 +2,7 @@
 import advanced_struct as ad
 import base_struct as bs
 import glm
+import math
 import model
 import moderngl as mgl
 import numpy as np
@@ -155,16 +156,102 @@ class Physic_Scene:
                 pos = object.get_transform().get_position()
                 delta_time = self.get_base_struct().get_delta_time()
                 movement = object.get_transform().get_movement()
-                future_pos = (pos[0] + collision.get_width() + movement[0] * delta_time, pos[1] + collision.get_width() + movement[1] * delta_time, pos[2] + collision.get_width() + movement[2] * delta_time)
-                future = self.map[0][round(future_pos[0])][round(pos[2])]
-                if future != 0:
-                    if future.get_collision() != None:
-                        object.get_transform().movement = (0, movement[1], movement[2])
-                future = self.map[0][round(pos[0])][round(future_pos[2])]
-                movement = object.get_transform().get_movement()
-                if future != 0:
-                    if future.get_collision() != None:
-                        object.get_transform().movement = (movement[0], movement[1], 0)
+
+                future_pos = (pos[0] + movement[0] * delta_time, pos[1] + movement[1] * delta_time, pos[2] + movement[2] * delta_time)
+                if math.floor(future_pos[2] - collision.get_width()) == math.floor(future_pos[2] + collision.get_width()): # If the object will collide with 2 case on X axe
+                    future_pos = (pos[0] + collision.get_width() + movement[0] * delta_time, pos[1] + collision.get_width() + movement[1] * delta_time, pos[2] + collision.get_width() + movement[2] * delta_time)
+                    future = self.map[0][round(future_pos[0])][math.floor(pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[0]) > future_pos[0] and future_pos[0] < pos[0] + collision.get_width()):
+                                object.get_transform().movement = (0, movement[1], movement[2])
+                    movement = object.get_transform().get_movement()
+
+                    future = self.map[0][round(future_pos[0])][math.ceil(pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[0]) > future_pos[0] and future_pos[0] < pos[0] + collision.get_width()):
+                                object.get_transform().movement = (0, movement[1], movement[2])
+                    movement = object.get_transform().get_movement()
+
+                    future_pos = (pos[0] + movement[0] * delta_time - collision.get_width(), pos[1] + movement[1] * delta_time - collision.get_width(), pos[2] + movement[2] * delta_time - collision.get_width())
+                    future = self.map[0][round(future_pos[0])][math.floor(pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[0]) < future_pos[0] and future_pos[0] > pos[0] - collision.get_width()):
+                                object.get_transform().movement = (0, movement[1], movement[2])
+                    movement = object.get_transform().get_movement()
+
+                    future = self.map[0][round(future_pos[0])][math.ceil(pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[0]) > future_pos[0] and future_pos[0] < pos[0] - collision.get_width()):
+                                object.get_transform().movement = (0, movement[1], movement[2])
+                    movement = object.get_transform().get_movement()
+                else: #If the object will collide with one case on X axe
+                    future_pos = (pos[0] + collision.get_width() + movement[0] * delta_time, pos[1] + collision.get_width() + movement[1] * delta_time, pos[2] + collision.get_width() + movement[2] * delta_time)
+                    future = self.map[0][round(future_pos[0])][round(pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[0]) > future_pos[0] and future_pos[0] < pos[0] + collision.get_width()):
+                                object.get_transform().movement = (0, movement[1], movement[2])
+                    movement = object.get_transform().get_movement()
+
+                    future_pos = (pos[0] + movement[0] * delta_time - collision.get_width(), pos[1] + movement[1] * delta_time - collision.get_width(), pos[2] + movement[2] * delta_time - collision.get_width())
+                    future = self.map[0][round(future_pos[0])][round(pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[0]) < future_pos[0] and future_pos[0] > pos[0] - collision.get_width()):
+                                object.get_transform().movement = (0, movement[1], movement[2])
+                    movement = object.get_transform().get_movement()
+
+                future_pos = (pos[0] + movement[0] * delta_time, pos[1] + movement[1] * delta_time, pos[2] + movement[2] * delta_time)
+                if math.floor(future_pos[0] - collision.get_width()) == math.floor(future_pos[0] + collision.get_width()): # If the object will collide with 2 case on Y axe
+                    future_pos = (pos[0] + collision.get_width() + movement[0] * delta_time, pos[1] + collision.get_width() + movement[1] * delta_time, pos[2] + collision.get_width() + movement[2] * delta_time)
+                    future = self.map[0][math.floor(pos[0])][round(future_pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[2]) > future_pos[2] and future_pos[2] < pos[2] + collision.get_width()):
+                                object.get_transform().movement = (movement[0], movement[1], 0)
+                    movement = object.get_transform().get_movement()
+
+                    future = self.map[0][math.ceil(pos[0])][round(future_pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[2]) > future_pos[2] and future_pos[2] < pos[2] + collision.get_width()):
+                                object.get_transform().movement = (movement[0], movement[1], 0)
+                    movement = object.get_transform().get_movement()
+
+                    future_pos = (pos[0] + movement[0] * delta_time - collision.get_width(), pos[1] + movement[1] * delta_time - collision.get_width(), pos[2] + movement[2] * delta_time - collision.get_width())
+                    future = self.map[0][math.floor(pos[0])][round(future_pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[2]) < future_pos[2] and future_pos[2] > pos[2] - collision.get_width()):
+                                object.get_transform().movement = (movement[0], movement[1], 0)
+                    movement = object.get_transform().get_movement()
+
+                    future = self.map[0][math.ceil(pos[0])][round(future_pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[2]) > future_pos[2] and future_pos[2] < pos[2] - collision.get_width()):
+                                object.get_transform().movement = (movement[0], movement[1], 0)
+                    movement = object.get_transform().get_movement()
+                else: #If the object will collide with one case on Y axe
+                    future_pos = (pos[0] + collision.get_width() + movement[0] * delta_time, pos[1] + collision.get_width() + movement[1] * delta_time, pos[2] + collision.get_width() + movement[2] * delta_time)
+                    future = self.map[0][round(pos[0])][round(future_pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[2]) > future_pos[2] and future_pos[2] < pos[2] + collision.get_width()):
+                                object.get_transform().movement = (movement[0], movement[1], 0)
+                    movement = object.get_transform().get_movement()
+
+                    future_pos = (pos[0] + movement[0] * delta_time - collision.get_width(), pos[1] + movement[1] * delta_time - collision.get_width(), pos[2] + movement[2] * delta_time - collision.get_width())
+                    future = self.map[0][round(pos[0])][round(future_pos[2])]
+                    if future != 0:
+                        if future.get_collision() != None:
+                            if not (round(future_pos[2]) < future_pos[2] and future_pos[2] > pos[2] - collision.get_width()):
+                                object.get_transform().movement = (movement[0], movement[1], 0)
+                    movement = object.get_transform().get_movement()
 
     def destroy(self) -> None:
         """Destroy the scene

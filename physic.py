@@ -142,6 +142,8 @@ class Physic_Dynamic_Object(Physic_Object):
     def update(self) -> None:
         """Update the physic of the transform
         """
+        
+
         self.apply_force(self.get_base_struct().get_gravity_force() * self.get_gravity_force() * self.get_base_struct().get_delta_time() * self.get_weight(), (0, 1, 0))
         movement = (self.get_movement()[0] * self.get_base_struct().get_delta_time(), self.get_movement()[1] * self.get_base_struct().get_delta_time(), self.get_movement()[2] * self.get_base_struct().get_delta_time())
         self.get_transform().move(movement)
