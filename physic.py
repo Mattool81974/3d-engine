@@ -14,9 +14,18 @@ class Square_Collision(Collision):
     """Class representating a square-shaped collision
     """
 
-    def __init__(self) -> None:
+    def __init__(self, width: float) -> None:
         """Create a square shaped collision
         """
+        self.width = width
+
+    def get_width(self) -> float:
+        """Return the width of the square
+
+        Returns:
+            float: width of the square
+        """
+        return self.width
 
 class Physic_Object:
     """Class representating a physic object

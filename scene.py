@@ -155,13 +155,16 @@ class Physic_Scene:
                 pos = object.get_transform().get_position()
                 delta_time = self.get_base_struct().get_delta_time()
                 movement = object.get_transform().get_movement()
-                future_pos = (pos[0] + movement[0] * delta_time, pos[1] + movement[1] * delta_time, pos[2] + movement[2] * delta_time)
-                future = self.map[0][round(future_pos[0])][round(future_pos[2])]
-                print(pos, movement, future_pos, future)
+                future_pos = (pos[0] + collision.get_width() + movement[0] * delta_time, pos[1] + collision.get_width() + movement[1] * delta_time, pos[2] + collision.get_width() + movement[2] * delta_time)
+                future = self.map[0][round(future_pos[0])][round(pos[2])]
                 if future != 0:
-                    print(future.get_collision())
                     if future.get_collision() != None:
-                        object.get_transform().movement = (0, 0, 0)
+                        object.get_transform().movement = (0, movement[1], movement[2])
+                future = self.map[0][round(pos[0])][round(future_pos[2])]
+                movement = object.get_transform().get_movement()
+                if future != 0:
+                    if future.get_collision() != None:
+                        object.get_transform().movement = (movement[0], movement[1], 0)
 
     def destroy(self) -> None:
         """Destroy the scene
@@ -501,7 +504,7 @@ class Scene(bs.Transform_Object):
                 else: # If the part does not exist
                     print("Matix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
     
-    def new_object(self, name: str, collision_type: str = "", graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
+    def new_object(self, name: str, collision_type: str = "", collision_width: float = 0.3, graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
         """Create a new object into the scene and return it
 
         Args:
@@ -538,7 +541,7 @@ class Scene(bs.Transform_Object):
                 physic_object = self.get_physic_scene().new_dynamic_object(name, object)
 
             if collision_type == "cube":
-                physic_object.collision = ps.Square_Collision()
+                physic_object.collision = ps.Square_Collision(collision_width)
         return object
     
     def update(self) -> None:
