@@ -15,6 +15,7 @@ class Advanced_Struct:
         self.all_textures = {}
         self.all_vbos = {}
         self.base_struct = base_struct
+        self.camera = bs.Camera(self.get_base_struct())
 
         cube_vbo = model.Cube_VBO(self.get_base_struct())
         plan_vbo = model.Triangle_VBO(self.get_base_struct())
@@ -47,3 +48,11 @@ class Advanced_Struct:
             bs.Base_Struct: base struct of the game
         """
         return self.base_struct
+    
+    def get_camera(self) -> bs.Camera:
+        """Return the camera into the game
+
+        Returns:
+            bs.Camera: camera into the game
+        """
+        return self.camera

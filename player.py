@@ -8,66 +8,16 @@ import numpy as np
 import pygame as pg
 import sys
 
-class Camera(bs.Transform_Object):
-    def __init__(self, base_struct: bs.Base_Struct, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
-        """Create a camera object
-        """
-        super().__init__(parent, position, rotation, scale)
-        self.base_struct = base_struct
-        self.camera_value = base_struct.get_camera_value()
-
-    def get_base_struct(self) -> bs.Base_Struct:
-        """Return the base struct of the game
-
-        Returns:
-            bs.Base_Struct: base struct of the game
-        """
-        return self.base_struct
-    
-    def get_camera_value(self) -> bs.Camera_Value:
-        """Return the values of the camera
-
-        Returns:
-            bs.Camera_Value: values of the camera
-        """
-        return self.camera_value
-    
-    def handle_camera_move(self) -> None:
-        """Handle the move of the camera
-        """
-        self.get_camera_value().set_position(self.get_absolute_position())
-
-    def handle_camera_rotation(self):
-        rel_y = self.get_base_struct().get_mouse_rel_pos()[1]
-
-        self.rotate((0, 0, -rel_y * self.get_camera_value().get_SENSITIVITY()))
-
-        self.get_camera_value().set_yaw(self.get_absolute_rotation()[0])
-        self.get_camera_value().set_pitch(self.get_absolute_rotation()[2])
-        self.get_camera_value().set_pitch(max(-89, min(89, self.get_camera_value().get_pitch())))
-
-    def handle_camera_vectors(self):
-        """Handle the vectors of the camera
-        """
-        self.get_camera_value().forward = self.get_forward()
-        self.get_camera_value().right = self.get_right()
-        self.get_camera_value().up = self.get_up()
-
-    def update(self):
-        self.handle_camera_move()
-        self.handle_camera_rotation()
-        self.handle_camera_vectors()
-
 class Player(bs.Transform_Object):
     """Class representing the player
     """
 
-    def __init__(self, advanced_struct: ad.Advanced_Struct, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
+    def __init__(self, advanced_struct: ad.Advanced_Struct, camera: bs.Camera, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
         """Create a player
         """
         super().__init__(parent, position, rotation, scale)
         self.advanced_struct = advanced_struct
-        self.camera = Camera(self.get_base_struct(), self)
+        self.camera = camera
         self.hud = model.HUD(self.get_base_struct(), self.get_advanced_struct().get_all_vbos()["square"])
 
         self.forward = glm.vec3(0, 0, -1)

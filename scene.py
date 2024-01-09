@@ -6,6 +6,7 @@ import model
 import moderngl as mgl
 import numpy as np
 import physic as ps
+import player as pl
 import pygame as pg
 import sys
 
@@ -144,6 +145,14 @@ class Physic_Scene:
                     self.map[level][object.get_transform().get_position()[0]][object.get_transform().get_position()[1]] = object
             return
         print("Matix physic scene : Warning !! The name \"" + name + "\" into the scene \"" + self.get_name() + "\" already exists.")
+
+    def check_collision(self) -> None:
+        """Check the collision for the dynamic objects to static object
+        """
+        for object in self.get_dynamic_objects():
+            collision = object.get_collision()
+            if collision != None:
+                pos = object.get_transform().get_position()
 
     def destroy(self) -> None:
         """Destroy the scene
@@ -378,6 +387,7 @@ class Scene(bs.Transform_Object):
         """
         super().__init__(None, (0, 0, 0), (0, 0, 0), (1, 1, 1))
         self.advanced_struct = advanced_struct
+        self.player = None
         self.name = name
         self.objects = {}
         self.scene_size = scene_size
@@ -455,6 +465,14 @@ class Scene(bs.Transform_Object):
         """
         return self.physic_scene
     
+    def get_player(self) -> pl.Player:
+        """Return the player into the scene, or None
+
+        Returns:
+            pl.Player: player into the scene, or None
+        """
+        return self.player
+    
     def get_scene_size(self) -> tuple:
         """Return the size of the scene
 
@@ -487,11 +505,11 @@ class Scene(bs.Transform_Object):
                     if parts[part] != "":
                         name = str(i) + ";" + str(j)
                         type = parts[part].get_type()
-                        self.new_object(name, None, position = (1 * i, 3, 1 * j), scale = (1, 5, 1), texture_path = parts[part].get_texture_path(), type = type)
+                        self.new_object(name, parent = None, position = (1 * i, 3, 1 * j), scale = (1, 5, 1), texture_path = parts[part].get_texture_path(), type = type)
                 else: # If the part does not exist
                     print("Matix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
     
-    def new_object(self, name: str, parent: bs.Transform_Object = None, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
+    def new_object(self, name: str, graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
         """Create a new object into the scene and return it
 
         Args:
@@ -505,16 +523,23 @@ class Scene(bs.Transform_Object):
             parent = self
         position = (position[0] * self.get_transform_multiplier(), position[1] * self.get_transform_multiplier(), position[2] * self.get_transform_multiplier())
         
-        # Add the object into the scene
-        object = bs.Transform_Object(parent, position, rotation, scale)
-        self.add_object(name, object)
-        if self.use_graphic():
+        # Create and add the object into the scene
+        object = None
+        if type == "player":
+            object = pl.Player(self.get_advanced_struct(), self.get_advanced_struct().get_camera(), parent, position, rotation, scale)
+            self.player = object
+        else:
+            object = bs.Transform_Object(parent, position, rotation, scale)
+            self.add_object(name, object)
+
+        # Add the object into the graphic and physic scene
+        if self.use_graphic() and graphic:
             if texture_path == "":
                 if type == "cube": texture_path = "textures/unknow"
                 else: texture_path = "textures/unknow.png"
 
             self.get_graphic_scene().new_object(name, object, type, texture_path)
-        if self.use_physic():
+        if self.use_physic() and physic:
             if static:
                 self.get_physic_scene().new_static_object(name, object)
         return object
@@ -531,6 +556,8 @@ class Scene(bs.Transform_Object):
             self.get_graphic_scene().render()
         for object in self.get_objects().values():
             object.soft_reset()
+        self.get_player().update()
+        self.get_player().soft_reset()
         
     def use_graphic(self) -> bool:
         """Return if the scene use graphic or not

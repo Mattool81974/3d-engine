@@ -96,6 +96,14 @@ class Game:
         """
         return self.base_struct
     
+    def get_camera(self) -> bs.Camera:
+        """Return the camera into the game
+
+        Returns:
+            bs.Camera: camera into the game
+        """
+        return self.camera
+
     def get_clock(self) -> pg.time.Clock:
         """Return the clock into the game
 
@@ -127,15 +135,7 @@ class Game:
             dict: dict with all the physics scenes
         """
         return self.physic_scenes
-
-    def get_player(self) -> pl.Player:
-        """Return the player into the game
-
-        Returns:
-            pl.Player: player into the game
-        """
-        return self.player
-    
+   
     def get_scenes(self) -> dict:
         """Return a dict with all the scenes
 
@@ -164,7 +164,6 @@ class Game:
         self.current_scene = ""
         self.parts = {"0": ""}
         self.physic_scenes = {}
-        self.player = pl.Player(self.get_advanced_struct(), position = (0, 4, 0))
         #self.player.set_fixed_position((True, False, True))
         self.scenes = {}
 
@@ -214,6 +213,8 @@ class Game:
         """
         if list(self.scenes.keys()).count(scene) > 0:
             self.current_scene = scene
+            if self.get_scenes()[self.get_current_scene()].get_player() != None:
+                self.get_advanced_struct().get_camera().set_parent(self.get_scenes()[self.get_current_scene()].get_player())
             return
         print("Matrix game : Warning !! The scene \"" + scene + " \" which you want to be the current scene does not exist.")
         return
@@ -224,8 +225,6 @@ class Game:
         self.get_base_struct().get_context().clear(255, 255, 255)
         if list(self.get_scenes().keys()).count(self.get_current_scene()) > 0:
             self.get_scenes()[self.get_current_scene()].update()
-        self.get_player().update()
-        self.get_player().soft_reset()
         surface = pg.Surface((100, 100))
         surface.fill((0, 0, 0))
         self.window.blit(surface, (50, 50))

@@ -215,6 +215,14 @@ class Transform_Object:
         """
         self.fixed_position = fixed_position
 
+    def set_parent(self, parent) -> None:
+        """Change the parent of the object
+
+        Args:
+            parent (Transform_Object): new parent of the object
+        """
+        self.parent = parent
+
     def set_position(self, position: tuple) -> None:
         """Change the position of the object
 
@@ -525,3 +533,53 @@ class Base_Struct:
             texture_count (int): texture count into the game
         """
         self.texture_count = texture_count
+
+class Camera(Transform_Object):
+    def __init__(self, base_struct: Base_Struct, parent: Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
+        """Create a camera object
+        """
+        super().__init__(parent, position, rotation, scale)
+        self.base_struct = base_struct
+        self.camera_value = base_struct.get_camera_value()
+
+    def get_base_struct(self) -> Base_Struct:
+        """Return the base struct of the game
+
+        Returns:
+            bs.Base_Struct: base struct of the game
+        """
+        return self.base_struct
+    
+    def get_camera_value(self) -> Camera_Value:
+        """Return the values of the camera
+
+        Returns:
+            bs.Camera_Value: values of the camera
+        """
+        return self.camera_value
+    
+    def handle_camera_move(self) -> None:
+        """Handle the move of the camera
+        """
+        self.get_camera_value().set_position(self.get_absolute_position())
+
+    def handle_camera_rotation(self):
+        rel_y = self.get_base_struct().get_mouse_rel_pos()[1]
+
+        self.rotate((0, 0, -rel_y * self.get_camera_value().get_SENSITIVITY()))
+
+        self.get_camera_value().set_yaw(self.get_absolute_rotation()[0])
+        self.get_camera_value().set_pitch(self.get_absolute_rotation()[2])
+        self.get_camera_value().set_pitch(max(-89, min(89, self.get_camera_value().get_pitch())))
+
+    def handle_camera_vectors(self):
+        """Handle the vectors of the camera
+        """
+        self.get_camera_value().forward = self.get_forward()
+        self.get_camera_value().right = self.get_right()
+        self.get_camera_value().up = self.get_up()
+
+    def update(self):
+        self.handle_camera_move()
+        self.handle_camera_rotation()
+        self.handle_camera_vectors()
