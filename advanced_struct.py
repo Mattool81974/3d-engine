@@ -20,10 +20,12 @@ class Advanced_Struct:
         cube_vbo = model.Cube_VBO(self.get_base_struct())
         plan_vbo = model.Triangle_VBO(self.get_base_struct())
         square_vbo = model.Square_VBO(self.get_base_struct())
+        test_vbo = model.Loaded_VBO(self.get_base_struct(), "vbos/table.vbo")
 
         self.all_vbos["cube"] = cube_vbo
         self.all_vbos["plan"] = plan_vbo
         self.all_vbos["square"] = square_vbo
+        self.all_vbos["test"] = test_vbo
 
     def get_all_textures(self) -> dict:
         """Return a dict of alls the textures

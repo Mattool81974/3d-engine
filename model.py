@@ -3,6 +3,7 @@ import base_struct as bs
 import glm
 import moderngl as mgl
 import numpy as np
+import os
 import pygame as pg
 import sys
 
@@ -241,7 +242,89 @@ class Cube_VBO(VBO):
         vertex_data = np.hstack([vertex_data, face])
         vertex_data = np.hstack([tex_coord_data, vertex_data])
         return vertex_data
- 
+
+class Loaded_VBO(VBO):
+    """Class representating a VBO loaded from a file
+    """
+
+    def __init__(self, base_struct: bs.Base_Struct, path: str) -> None:
+        """Create a VBO from a file
+
+        Args:
+            base_struct (bs.Base_Struct): base structure of the game
+        """
+        self.lines = []
+        if os.path.exists(path):
+            file = open(path, "r")
+            self.lines = file.readlines()
+            for line in range(len(self.lines) - 1):
+                self.lines[line] = self.lines[line][:-1]
+            file.close()
+
+        super().__init__(base_struct)
+
+        if len(self.lines) > 0:
+            self.attributes = self.lines[0].split(" ")
+            self.format = self.lines[1]
+
+    def get_vertex_data(self):
+        """Return the vertex data of the VBO
+
+        Returns:
+            np.Array: vertex data of the VBO
+        """
+        indices = []
+        vertices = []
+        indices_temp = self.lines[3].split(" ")
+        vertices_temp = self.lines[2].split(" ")
+        for v in range(int(len(vertices_temp))):
+            add = 0
+            multiplier = 1
+            if v % 3 == 0:
+                add = 0
+                multiplier = 1
+            elif v % 3 == 1:
+                add = 0.9
+                multiplier = 0.1
+            elif v % 3 == 2:
+                add = 0
+                multiplier = 1
+            if v > len(vertices_temp) / 2:
+                multiplier = 5
+            vertices_temp[v] = float(vertices_temp[v]) * multiplier + add
+        for v in range(int(len(vertices_temp) / 3)):
+            vertices.append((vertices_temp[v * 3], vertices_temp[v * 3 + 1], vertices_temp[v * 3 + 2]))
+
+        for i in range(int(len(indices_temp))):
+            indices_temp[i] = int(indices_temp[i])
+        for v in range(int(len(indices_temp) / 3)):
+            indices.append((indices_temp[v * 3], indices_temp[v * 3 + 1], indices_temp[v * 3 + 2]))
+        vertex_data = self.get_data(vertices, indices)
+
+        indices_coord = []
+        vertices_coord = []
+        indices_coord_temp = self.lines[5].split(" ")
+        vertices_coord_temp = self.lines[4].split(" ")
+        for v in range(len(vertices_coord_temp)):
+            vertices_coord_temp[v] = float(vertices_coord_temp[v])
+        for v in range(int(len(vertices_coord_temp) / 2)):
+            vertices_coord.append((vertices_coord_temp[v * 2], vertices_coord_temp[v * 2 + 1]))
+
+        for i in range(len(indices_coord_temp)):
+            indices_coord_temp[i] = int(indices_coord_temp[i])
+        for i in range(int(len(indices_coord_temp) / 3)):
+            indices_coord.append((indices_coord_temp[i * 3], indices_coord_temp[i * 3 + 1], indices_coord_temp[i * 3 + 2]))
+        coord_data = self.get_data(vertices_coord, indices_coord)
+
+        face = self.lines[6].split(" ")
+        for f in range(len(face)):
+            face[f] = (int(face[f]),)
+        face = np.array(face, dtype="f4")
+
+        vertex_data = np.hstack([vertex_data, face])
+        vertex_data = np.hstack([coord_data, vertex_data])
+        return vertex_data
+
 class VAO:
     """Class representing a vertex array object
     """
@@ -379,7 +462,7 @@ class Graphic_Object:
     """Class representating a graphic object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, texture: Texture, transform: bs.Transform_Object, vbo: VBO, shader_path = "shaders/triangle", texture_count_size: tuple = (1, 1), type: str = "graphic", do_on_init = True) -> None:
+    def __init__(self, base_struct: bs.Base_Struct, texture: Texture, transform: bs.Transform_Object, vbo: VBO, shader_path: str = "shaders/triangle", texture_count_size: tuple = (1, 1), type: str = "graphic", do_on_init = True) -> None:
         """Create a graphic object
 
         Args:
@@ -496,7 +579,7 @@ class Cube_Object(Graphic_Object):
     """Class representating a graphic cube, heritating from Graphics_Object
     """
 
-    def __init__(self, base_struct: bs.Base_Struct, texture: list, transform: bs.Transform_Object, vbo: VBO, scale_texture: bool = True, shader_path: str = "shaders/cube", texture_count_size: list = ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)), type: str = "cube") -> None:
+    def __init__(self, base_struct: bs.Base_Struct, texture: list, transform: bs.Transform_Object, vbo: VBO, one_texture: bool = False, scale_texture: bool = True, shader_path: str = "shaders/cube", texture_count_size: list = ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)), type: str = "cube") -> None:
         """Create a graphics cube
 
         Args:
@@ -508,13 +591,15 @@ class Cube_Object(Graphic_Object):
             scale (tuple, optional): scale of the cube. Defaults to (0, 0, 0).
             type (str, optional): tpe fo the cube. Defaults to "cube".
         """
+        self.one_texture = one_texture
         self.scale_texture = scale_texture
         self.texture_scale = (1, 1, 1)
         super().__init__(base_struct, texture[0], transform, vbo, shader_path, texture_count_size[0], type, False)
 
-        for i in range(1, 6):
-            self.texture.append(texture[i])
-            self.texture_count_size.append(texture_count_size[i])
+        if not self.has_one_texture():
+            for i in range(1, 6):
+                self.texture.append(texture[i])
+                self.texture_count_size.append(texture_count_size[i])
         self.set_scale(self.get_transform().get_scale())
         self.on_init()
 
@@ -533,6 +618,14 @@ class Cube_Object(Graphic_Object):
             tuple: how the texture is scaled
         """
         return self.texture_scale
+
+    def has_one_texture(self) -> bool:
+        """Return if the cube use only one texture or not
+
+        Returns:
+            bool: if the cube use only one texture or not
+        """
+        return self.one_texture
 
     def on_init(self) -> None:
         """Init the uniform variables into the shader

@@ -421,7 +421,7 @@ class Graphic_Scene(bs.Transform_Object):
 
         # If the texture is empty
         if texture_path == "":
-            if type == "cube":
+            if type == "cube" or type == "test":
                 texture_path = "textures/unknow"
             else:
                 texture_path = "textures/unknow.png"
@@ -432,8 +432,8 @@ class Graphic_Scene(bs.Transform_Object):
         textures = self.get_advanced_struct().get_all_textures()
         if splitted[-1] == "png" or splitted[-1] == "jpg":
             if list(textures.keys()).count(texture_path) <= 0:
-                texture = model.Texture(self.get_advanced_struct().get_base_struct(), texture_path)
-                textures[texture_path] = texture
+                texture = [model.Texture(self.get_advanced_struct().get_base_struct(), texture_path)]
+                textures[texture_path] = texture[0]
             else:
                 texture = textures[texture]
         else:
@@ -450,6 +450,10 @@ class Graphic_Scene(bs.Transform_Object):
         # Add the object into the scene
         if type == "cube":
             object = model.Cube_Object(self.get_advanced_struct().get_base_struct(), texture = texture, transform = transform, vbo = vbo, type = type)
+            self.add_object(name, object)
+            return object
+        elif type == "test":
+            object = model.Cube_Object(self.get_advanced_struct().get_base_struct(), one_texture = True, texture = texture, transform = transform, vbo = vbo, type = type)
             self.add_object(name, object)
             return object
         else:
