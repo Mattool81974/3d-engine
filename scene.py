@@ -140,19 +140,28 @@ class Physic_Scene:
         """
         if list(self.get_static_objects().keys()).count(name) <= 0:
             self.get_static_objects()[name] = object
-            if object.get_transform().get_position()[0] >= 0 and object.get_transform().get_position()[0] < self.get_scene_size()[0]:
-                if object.get_transform().get_position()[1] >= 0 and object.get_transform().get_position()[1] < self.get_scene_size()[1]:
-                    self.map[level][object.get_transform().get_position()[0]][object.get_transform().get_position()[1]] = object
+            if round(object.get_transform().get_position()[0]) >= 0 and round(object.get_transform().get_position()[0]) < self.get_scene_size()[0]:
+                if round(object.get_transform().get_position()[2]) >= 0 and round(object.get_transform().get_position()[2]) < self.get_scene_size()[1]:
+                    self.map[level][round(object.get_transform().get_position()[0])][round(object.get_transform().get_position()[2])] = object
             return
         print("Matix physic scene : Warning !! The name \"" + name + "\" into the scene \"" + self.get_name() + "\" already exists.")
 
     def check_collision(self) -> None:
         """Check the collision for the dynamic objects to static object
         """
-        for object in self.get_dynamic_objects():
+        for object in self.get_dynamic_objects().values():
             collision = object.get_collision()
             if collision != None:
                 pos = object.get_transform().get_position()
+                delta_time = self.get_base_struct().get_delta_time()
+                movement = object.get_transform().get_movement()
+                future_pos = (pos[0] + movement[0] * delta_time, pos[1] + movement[1] * delta_time, pos[2] + movement[2] * delta_time)
+                future = self.map[0][round(future_pos[0])][round(future_pos[2])]
+                print(pos, movement, future_pos, future)
+                if future != 0:
+                    print(future.get_collision())
+                    if future.get_collision() != None:
+                        object.get_transform().movement = (0, 0, 0)
 
     def destroy(self) -> None:
         """Destroy the scene
@@ -262,6 +271,7 @@ class Physic_Scene:
             object.update()
         for object in list(self.get_dynamic_objects().values()):
             object.update()
+        self.check_collision()
 
 class Graphic_Scene(bs.Transform_Object):
     """Class representing a graphic scene (collection of graphic object)
@@ -270,11 +280,10 @@ class Graphic_Scene(bs.Transform_Object):
     def __init__(self, advanced_struct: ad.Advanced_Struct, name: str) -> None:
         """Create a scene
         """
-        super().__init__(parent = None, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1))
+        super().__init__(advanced_struct.get_base_struct(), parent = None, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1))
         self.advanced_struct = advanced_struct
         self.objects = {}
         self.name = name
-        self.transform_multiplier = 2
 
     def add_object(self, name: str, object: bs.Transform_Object):
         """Add an object to the scene
@@ -307,15 +316,7 @@ class Graphic_Scene(bs.Transform_Object):
             str: name of the scene
         """
         return self.name
-    
-    def get_transform_multiplier(self) -> float:
-        """Return the multiplier for transforming
-
-        Returns:
-            float: multiplier for transforming
-        """
-        return self.transform_multiplier
-    
+      
     def new_object(self, name: str, transform: bs.Transform_Object, type: SyntaxError, texture_path: str = "") -> bs.Transform_Object:
         """Create a new object into the scene and return it
 
@@ -385,13 +386,12 @@ class Scene(bs.Transform_Object):
     def __init__(self, advanced_struct: ad.Advanced_Struct, name: str, graphic: bool = True, physic: bool = True, scene_size: tuple = (25, 25)) -> None:
         """Create a scene
         """
-        super().__init__(None, (0, 0, 0), (0, 0, 0), (1, 1, 1))
         self.advanced_struct = advanced_struct
+        super().__init__(advanced_struct.get_base_struct(), None, (0, 0, 0), (0, 0, 0), (1, 1, 1))
         self.player = None
         self.name = name
         self.objects = {}
         self.scene_size = scene_size
-        self.transform_multiplier = 2
 
         # Create physic and graphic scene if necessary
         self.graphic = graphic
@@ -480,15 +480,7 @@ class Scene(bs.Transform_Object):
             tuple: size of the scene
         """
         return self.scene_size
-    
-    def get_transform_multiplier(self) -> float:
-        """Return the multiplier for 1 in the transform space for the scene
-
-        Returns:
-            float: multiplier for 1 in the transform space for the scene
-        """
-        return self.transform_multiplier
-    
+      
     def load_from_2d_scene(self, scene: Scene_2D, parts: dict) -> None:
         """Load the map from a 2d scene
 
@@ -496,7 +488,7 @@ class Scene(bs.Transform_Object):
             scene (Scene_2D): 2d scene used to load the map
             parts (dict): parts used to make the scene
         """
-        self.set_position((scene.get_pos()[0] * self.get_transform_multiplier(), 0, scene.get_pos()[1] * self.get_transform_multiplier()))
+        self.set_position((scene.get_pos()[0], 0, scene.get_pos()[1]))
         if self.use_physic(): self.get_physic_scene().set_scene_size(scene.get_scene_size())
         for j in range(scene.get_scene_size()[1]): # Load each part of the map
             for i in range(scene.get_scene_size()[0]):
@@ -505,11 +497,11 @@ class Scene(bs.Transform_Object):
                     if parts[part] != "":
                         name = str(i) + ";" + str(j)
                         type = parts[part].get_type()
-                        self.new_object(name, parent = None, position = (1 * i, 3, 1 * j), scale = (1, 5, 1), texture_path = parts[part].get_texture_path(), type = type)
+                        self.new_object(name, collision_type = "cube", parent = None, position = (1 * i, 3, 1 * j), scale = (1, 5, 1), texture_path = parts[part].get_texture_path(), type = type)
                 else: # If the part does not exist
                     print("Matix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
     
-    def new_object(self, name: str, graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
+    def new_object(self, name: str, collision_type: str = "", graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
         """Create a new object into the scene and return it
 
         Args:
@@ -521,7 +513,6 @@ class Scene(bs.Transform_Object):
         """
         if parent == None:
             parent = self
-        position = (position[0] * self.get_transform_multiplier(), position[1] * self.get_transform_multiplier(), position[2] * self.get_transform_multiplier())
         
         # Create and add the object into the scene
         object = None
@@ -529,7 +520,7 @@ class Scene(bs.Transform_Object):
             object = pl.Player(self.get_advanced_struct(), self.get_advanced_struct().get_camera(), parent, position, rotation, scale)
             self.player = object
         else:
-            object = bs.Transform_Object(parent, position, rotation, scale)
+            object = bs.Transform_Object(self.get_base_struct(), parent, position, rotation, scale)
             self.add_object(name, object)
 
         # Add the object into the graphic and physic scene
@@ -540,13 +531,21 @@ class Scene(bs.Transform_Object):
 
             self.get_graphic_scene().new_object(name, object, type, texture_path)
         if self.use_physic() and physic:
+            physic_object = None
             if static:
-                self.get_physic_scene().new_static_object(name, object)
+                physic_object = self.get_physic_scene().new_static_object(name, object)
+            else:
+                physic_object = self.get_physic_scene().new_dynamic_object(name, object)
+
+            if collision_type == "cube":
+                physic_object.collision = ps.Square_Collision()
         return object
     
     def update(self) -> None:
         """Update the scene
         """
+        self.get_player().handle_player_move()
+        self.get_player().handle_player_rotation()
         for object in self.get_objects().values():
             object.update()
         if self.use_physic():

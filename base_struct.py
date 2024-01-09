@@ -25,249 +25,6 @@ def get_all_files(path: str) -> list:
                 all_paths.append((path + "/" + p, p, extension))
     return all_paths
 
-class Transform_Object:
-    """Class representing an object which can be transformed
-    """
-
-    def __init__(self, parent = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
-        """Create an object which can be transformed
-
-        Args:
-            position (tuple, optional): position of the plan. Defaults to (0, 0, 0).
-            rotation (tuple, optional): rotation of the plan. Defaults to (0, 0, 0).
-            scale (tuple, optional): scale of the plan. Defaults to (0, 0, 0).
-        """
-        self.fixed_position = (False, False, False)
-        self.movement = (0, 0, 0)
-        self.parent = parent
-        self.position = (0, 0, 0)
-        self.rotation = (0, 0, 0)
-        self.scale = (1, 1, 1)
-
-        self.set_position(position)
-        self.set_rotation(rotation)
-        self.set_scale(scale)
-
-        self.forward = glm.vec3(0, 0, -1)
-        self.right = glm.vec3(1, 0, 0)
-        self.up = glm.vec3(0, 1, 0)
-
-    def get_absolute_position(self, scaled: bool = False) -> tuple:
-        """Return the absolute position of the object into the scene
-
-        Returns:
-            tuple: absolute position of the object into the scene
-        """
-        position = self.get_position(scaled)
-        if self.get_parent() != None:
-            position = (position[0] + self.get_parent().get_absolute_position(scaled)[0], position[1] + self.get_parent().get_absolute_position(scaled)[1], position[2] + self.get_parent().get_absolute_position(scaled)[2])
-        return position
-    
-    def get_absolute_rotation(self) -> tuple:
-        """Return the absolute rotation of the object into the scene
-
-        Returns:
-            tuple: absolute rotation of the object into the scene
-        """
-        rotation = self.get_rotation()
-        if self.get_parent() != None:
-            rotation = (rotation[0] + self.get_parent().get_absolute_rotation()[0], rotation[1] + self.get_parent().get_absolute_rotation()[1], rotation[2] + self.get_parent().get_absolute_rotation()[2])
-        return rotation
-    
-    def get_absolute_scale(self) -> tuple:
-        """Return the absolute scale of the object into the scene
-
-        Returns:
-            tuple: absolute scale of the object into the scene
-        """
-        scale = self.get_scale()
-        if self.get_parent() != None:
-            parent_scale = self.get_parent().get_absolute_scale()
-            scale = (scale[0] * parent_scale[0], scale[1] * parent_scale[1], scale[2] * parent_scale[2])
-        return scale
-    
-    def get_fixed_position(self) -> tuple:
-        """Return the fixed position into the object
-
-        Returns:
-            tuple: fixed position into the object
-        """
-        return self.fixed_position
-
-    def get_forward(self) -> glm.vec3:
-        """Return the forward vector of the object
-
-        Returns:
-            glm.vec3: forward vector of the object
-        """
-        return self.forward
-
-    def get_model_matrix(self) -> glm.mat4x4:
-        """Return the model of the matrix
-
-        Returns:
-            glm.mat4x4: _description_
-        """
-
-        # Translation
-        m_model = glm.mat4()
-        m_model = glm.translate(m_model, self.get_absolute_position(True))
-
-        # Rotation
-        m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[0]), glm.vec3(1, 0, 0))
-        m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[1]), glm.vec3(0, 1, 0))
-        m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[2]), glm.vec3(0, 0, 1))
-
-        # Scaling
-        m_model = glm.scale(m_model, self.get_absolute_scale())
-
-        return m_model
-    
-    def get_movement(self) -> tuple:
-        """Return the movement for this frame
-
-        Returns:
-            tuple: movement for this frame
-        """
-        return self.movement
-
-    def get_parent(self):
-        """Return the parent of the object
-        """
-        return self.parent
-
-    def get_position(self, scaled: bool = False) -> tuple:
-        """Return the position of the object
-
-        Returns:
-            tuple: position of the object
-        """
-        position = self.position
-        if scaled and self.get_parent() != None:
-            parent_scale = self.get_parent().get_scale()
-            position = (position[0] * parent_scale[0], position[1] * parent_scale[1], position[2] * parent_scale[2])
-        return position
-    
-    def get_right(self) -> glm.vec3:
-        """Return the right vector of the object
-
-        Returns:
-            glm.vec3: right vector of the object
-        """
-        return self.right
-    
-    def get_rotation(self) -> tuple:
-        """Return the rotation of the object
-
-        Returns:
-            tuple: rotation of the object
-        """
-        return self.rotation
-    
-    def get_scale(self) -> tuple:
-        """Return the scale of the object
-
-        Returns:
-            tuple: scale of the object
-        """
-        return self.scale
-    
-    def get_up(self) -> glm.vec3:
-        """Return the up vector of the object
-
-        Returns:
-            glm.vec3: up vector of the object
-        """
-        return self.up
-    
-    def move(self, translation: tuple) -> None:
-        """Move the object
-
-        Args:
-            translation (tuple): vector 3d of the translation
-        """
-        x_transform = translation[0]
-        if self.get_fixed_position()[0]: x_transform = 0
-        y_transform = translation[1]
-        if self.get_fixed_position()[1]: y_transform = 0
-        z_transform = translation[2]
-        if self.get_fixed_position()[2]: z_transform = 0
-        self.movement = (self.get_movement()[0] + x_transform, self.get_movement()[1] + y_transform, self.get_movement()[2] + z_transform)
-
-    def rotate(self, rotation: tuple) -> None:
-        """Rotate the object
-
-        Args:
-            rotation (tuple): vector 3d of the rotation
-        """
-        x_rotation = rotation[0]
-        y_rotation = rotation[1]
-        z_rotation = rotation[2]
-
-        self.set_rotation((self.get_rotation()[0] + x_rotation, self.get_rotation()[1] + y_rotation, self.get_rotation()[2] + z_rotation))
-        self.update_vectors()
-
-    def set_fixed_position(self, fixed_position: tuple) -> None:
-        """Change the value of the fixed position
-
-        Args:
-            fixed_position (tuple): new value of the fixed position
-        """
-        self.fixed_position = fixed_position
-
-    def set_parent(self, parent) -> None:
-        """Change the parent of the object
-
-        Args:
-            parent (Transform_Object): new parent of the object
-        """
-        self.parent = parent
-
-    def set_position(self, position: tuple) -> None:
-        """Change the position of the object
-
-        Args:
-            position (tuple): new position of the object
-        """
-        self.position = position
-
-    def set_rotation(self, rotation: tuple) -> None:
-        """Change the rotation of the object
-
-        Args:
-            rotation (tuple): rotation of the object
-        """
-        self.rotation = rotation
-
-    def set_scale(self, scale: tuple):
-        """Change the scale of the object
-
-        Args:
-            scale (tuple): scale of the object
-        """
-        self.scale = scale
-    
-    def soft_reset(self) -> None:
-        """Reset the one-frame long object attributes values
-        """
-        self.set_position((self.get_position()[0] + self.get_movement()[0], self.get_position()[1] + self.get_movement()[1], self.get_position()[2] + self.get_movement()[2]))
-        self.movement = (0, 0, 0)
-
-    def update(self) -> None:
-        """Update the object
-        """
-
-    def update_vectors(self):
-        x, y, z = glm.radians(self.get_absolute_rotation()[0]), glm.radians(self.get_absolute_rotation()[1]), glm.radians(self.get_absolute_rotation()[2])
-
-        self.forward.x = glm.cos(x) * glm.cos(z)
-        self.forward.y = glm.sin(z)
-        self.forward.z = glm.sin(x) * glm.cos(z)
-
-        self.forward = glm.normalize(self.get_forward())
-        self.right = glm.normalize(glm.cross(self.get_forward(), glm.vec3(0, 1, 0)))
-        self.up = glm.normalize(glm.cross(self.get_right(), self.get_forward()))
-
 class Camera_Value:
     """Class representing the value of the camera
     """
@@ -438,6 +195,7 @@ class Base_Struct:
         self.delta_time = 0
         self.face_order = {"cube": [0, 1, 2, 3, 4, 5]}
         self.mouse_rel_pos = (0, 0)
+        self.transform_multiplier = 2
         self.window_size = window_size
 
         self.camera_value = Camera_Value(self.get_window_size()[0] / self.get_window_size()[1])
@@ -502,6 +260,14 @@ class Base_Struct:
         """
         return self.texture_count
     
+    def get_transform_multiplier(self) -> float:
+        """Return the multiplier for a transformation
+
+        Returns:
+            float: multiplier for a transformation
+        """
+        return self.transform_multiplier
+    
     def get_window_size(self) -> tuple:
         """Return the size of the window
 
@@ -534,12 +300,266 @@ class Base_Struct:
         """
         self.texture_count = texture_count
 
+class Transform_Object:
+    """Class representing an object which can be transformed
+    """
+
+    def __init__(self, base_struct: Base_Struct, parent = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
+        """Create an object which can be transformed
+
+        Args:
+            position (tuple, optional): position of the plan. Defaults to (0, 0, 0).
+            rotation (tuple, optional): rotation of the plan. Defaults to (0, 0, 0).
+            scale (tuple, optional): scale of the plan. Defaults to (0, 0, 0).
+        """
+        self.base_struct = base_struct
+        self.fixed_position = (False, False, False)
+        self.movement = (0, 0, 0)
+        self.parent = parent
+        self.position = (0, 0, 0)
+        self.rotation = (0, 0, 0)
+        self.scale = (1, 1, 1)
+
+        self.set_position(position)
+        self.set_rotation(rotation)
+        self.set_scale(scale)
+
+        self.forward = glm.vec3(0, 0, -1)
+        self.right = glm.vec3(1, 0, 0)
+        self.up = glm.vec3(0, 1, 0)
+
+    def get_absolute_position(self, scaled: bool = False, transform: bool = True) -> tuple:
+        """Return the absolute position of the object into the scene
+
+        Returns:
+            tuple: absolute position of the object into the scene
+        """
+        position = self.get_position(scaled, transform)
+        if self.get_parent() != None:
+            parent = self.get_parent().get_absolute_position(scaled, transform)
+            position = (position[0] + parent[0], position[1] + parent[1], position[2] + parent[2])
+        return position
+    
+    def get_absolute_rotation(self) -> tuple:
+        """Return the absolute rotation of the object into the scene
+
+        Returns:
+            tuple: absolute rotation of the object into the scene
+        """
+        rotation = self.get_rotation()
+        if self.get_parent() != None:
+            rotation = (rotation[0] + self.get_parent().get_absolute_rotation()[0], rotation[1] + self.get_parent().get_absolute_rotation()[1], rotation[2] + self.get_parent().get_absolute_rotation()[2])
+        return rotation
+    
+    def get_absolute_scale(self) -> tuple:
+        """Return the absolute scale of the object into the scene
+
+        Returns:
+            tuple: absolute scale of the object into the scene
+        """
+        scale = self.get_scale()
+        if self.get_parent() != None:
+            parent_scale = self.get_parent().get_absolute_scale()
+            scale = (scale[0] * parent_scale[0], scale[1] * parent_scale[1], scale[2] * parent_scale[2])
+        return scale
+
+    def get_base_struct(self) -> Base_Struct:
+        """Return the base struct of the game
+
+        Returns:
+            Base_Struct: base struct of the game
+        """
+        return self.base_struct
+    
+    def get_fixed_position(self) -> tuple:
+        """Return the fixed position into the object
+
+        Returns:
+            tuple: fixed position into the object
+        """
+        return self.fixed_position
+
+    def get_forward(self) -> glm.vec3:
+        """Return the forward vector of the object
+
+        Returns:
+            glm.vec3: forward vector of the object
+        """
+        return self.forward
+
+    def get_model_matrix(self) -> glm.mat4x4:
+        """Return the model of the matrix
+
+        Returns:
+            glm.mat4x4: _description_
+        """
+
+        # Translation
+        m_model = glm.mat4()
+        m_model = glm.translate(m_model, self.get_absolute_position(True, False))
+
+        # Rotation
+        m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[0]), glm.vec3(1, 0, 0))
+        m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[1]), glm.vec3(0, 1, 0))
+        m_model = glm.rotate(m_model, glm.radians(self.get_rotation()[2]), glm.vec3(0, 0, 1))
+
+        # Scaling
+        m_model = glm.scale(m_model, self.get_absolute_scale())
+
+        return m_model
+    
+    def get_movement(self) -> tuple:
+        """Return the movement for this frame
+
+        Returns:
+            tuple: movement for this frame
+        """
+        return self.movement
+
+    def get_parent(self):
+        """Return the parent of the object
+        """
+        return self.parent
+
+    def get_position(self, scaled: bool = False, transformed: bool = True) -> tuple:
+        """Return the position of the object
+
+        Returns:
+            tuple: position of the object
+        """
+        position = self.position
+        if scaled and self.get_parent() != None:
+            parent_scale = self.get_parent().get_scale()
+            position = (position[0] * parent_scale[0], position[1] * parent_scale[1], position[2] * parent_scale[2])
+        if transformed: position = (position[0] / self.get_base_struct().get_transform_multiplier(), position[1] / self.get_base_struct().get_transform_multiplier(), position[2] / self.get_base_struct().get_transform_multiplier())
+        return position
+    
+    def get_right(self) -> glm.vec3:
+        """Return the right vector of the object
+
+        Returns:
+            glm.vec3: right vector of the object
+        """
+        return self.right
+    
+    def get_rotation(self) -> tuple:
+        """Return the rotation of the object
+
+        Returns:
+            tuple: rotation of the object
+        """
+        return self.rotation
+    
+    def get_scale(self) -> tuple:
+        """Return the scale of the object
+
+        Returns:
+            tuple: scale of the object
+        """
+        return self.scale
+    
+    def get_up(self) -> glm.vec3:
+        """Return the up vector of the object
+
+        Returns:
+            glm.vec3: up vector of the object
+        """
+        return self.up
+    
+    def move(self, translation: tuple) -> None:
+        """Move the object
+
+        Args:
+            translation (tuple): vector 3d of the translation
+        """
+        x_transform = translation[0]
+        if self.get_fixed_position()[0]: x_transform = 0
+        y_transform = translation[1]
+        if self.get_fixed_position()[1]: y_transform = 0
+        z_transform = translation[2]
+        if self.get_fixed_position()[2]: z_transform = 0
+        self.movement = (self.get_movement()[0] + x_transform, self.get_movement()[1] + y_transform, self.get_movement()[2] + z_transform)
+
+    def rotate(self, rotation: tuple) -> None:
+        """Rotate the object
+
+        Args:
+            rotation (tuple): vector 3d of the rotation
+        """
+        x_rotation = rotation[0]
+        y_rotation = rotation[1]
+        z_rotation = rotation[2]
+
+        self.set_rotation((self.get_rotation()[0] + x_rotation, self.get_rotation()[1] + y_rotation, self.get_rotation()[2] + z_rotation))
+        self.update_vectors()
+
+    def set_fixed_position(self, fixed_position: tuple) -> None:
+        """Change the value of the fixed position
+
+        Args:
+            fixed_position (tuple): new value of the fixed position
+        """
+        self.fixed_position = fixed_position
+
+    def set_parent(self, parent) -> None:
+        """Change the parent of the object
+
+        Args:
+            parent (Transform_Object): new parent of the object
+        """
+        self.parent = parent
+
+    def set_position(self, position: tuple, transformed: bool = True) -> None:
+        """Change the position of the object
+
+        Args:
+            position (tuple): new position of the object
+        """
+        if transformed: position = (position[0] * self.get_base_struct().get_transform_multiplier(), position[1] * self.get_base_struct().get_transform_multiplier(), position[2] * self.get_base_struct().get_transform_multiplier())
+        self.position = position
+
+    def set_rotation(self, rotation: tuple) -> None:
+        """Change the rotation of the object
+
+        Args:
+            rotation (tuple): rotation of the object
+        """
+        self.rotation = rotation
+
+    def set_scale(self, scale: tuple):
+        """Change the scale of the object
+
+        Args:
+            scale (tuple): scale of the object
+        """
+        self.scale = scale
+    
+    def soft_reset(self) -> None:
+        """Reset the one-frame long object attributes values
+        """
+        self.set_position((self.get_position()[0] + self.get_movement()[0], self.get_position()[1] + self.get_movement()[1], self.get_position()[2] + self.get_movement()[2]))
+        self.movement = (0, 0, 0)
+
+    def update(self) -> None:
+        """Update the object
+        """
+
+    def update_vectors(self):
+        x, y, z = glm.radians(self.get_absolute_rotation()[0]), glm.radians(self.get_absolute_rotation()[1]), glm.radians(self.get_absolute_rotation()[2])
+
+        self.forward.x = glm.cos(x) * glm.cos(z)
+        self.forward.y = glm.sin(z)
+        self.forward.z = glm.sin(x) * glm.cos(z)
+
+        self.forward = glm.normalize(self.get_forward())
+        self.right = glm.normalize(glm.cross(self.get_forward(), glm.vec3(0, 1, 0)))
+        self.up = glm.normalize(glm.cross(self.get_right(), self.get_forward()))
+
 class Camera(Transform_Object):
     def __init__(self, base_struct: Base_Struct, parent: Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
         """Create a camera object
         """
-        super().__init__(parent, position, rotation, scale)
-        self.base_struct = base_struct
+        super().__init__(base_struct, parent, position, rotation, scale)
         self.camera_value = base_struct.get_camera_value()
 
     def get_base_struct(self) -> Base_Struct:
@@ -561,7 +581,7 @@ class Camera(Transform_Object):
     def handle_camera_move(self) -> None:
         """Handle the move of the camera
         """
-        self.get_camera_value().set_position(self.get_absolute_position())
+        self.get_camera_value().set_position(self.get_absolute_position(transform = False))
 
     def handle_camera_rotation(self):
         rel_y = self.get_base_struct().get_mouse_rel_pos()[1]

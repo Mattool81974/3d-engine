@@ -215,6 +215,7 @@ class Game:
             self.current_scene = scene
             if self.get_scenes()[self.get_current_scene()].get_player() != None:
                 self.get_advanced_struct().get_camera().set_parent(self.get_scenes()[self.get_current_scene()].get_player())
+                self.get_advanced_struct().get_camera().set_position((0, 0, 0))
             return
         print("Matrix game : Warning !! The scene \"" + scene + " \" which you want to be the current scene does not exist.")
         return

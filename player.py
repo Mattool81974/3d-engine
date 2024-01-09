@@ -15,8 +15,8 @@ class Player(bs.Transform_Object):
     def __init__(self, advanced_struct: ad.Advanced_Struct, camera: bs.Camera, parent: bs.Transform_Object = None, position: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0), scale: tuple = (1, 1, 1)) -> None:
         """Create a player
         """
-        super().__init__(parent, position, rotation, scale)
         self.advanced_struct = advanced_struct
+        super().__init__(self.get_base_struct(), parent, position, rotation, scale)
         self.camera = camera
         self.hud = model.HUD(self.get_base_struct(), self.get_advanced_struct().get_all_vbos()["square"])
 
@@ -75,8 +75,6 @@ class Player(bs.Transform_Object):
     def update(self) -> None:
         """Update the player
         """
-        self.handle_player_move()
-        self.handle_player_rotation()
         self.camera.update()
         self.hud.update()
         self.hud.render()

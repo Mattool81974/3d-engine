@@ -586,7 +586,7 @@ class HUD(Graphic_Object):
             type (str, optional): tpe fo the cube. Defaults to "cube".
             do_on_init (bool, optional): boolean if the super() do the init. Defaults to True.
         """
-        self.transform = bs.Transform_Object(None, (0, 0, 0), (0, 0, 0), (1, 1, 1))
+        self.transform = bs.Transform_Object(base_struct, None, (0, 0, 0), (0, 0, 0), (1, 1, 1))
         self.texture = Texture(base_struct, texture)
         super().__init__(base_struct, self.texture, self.get_transform(), vbo, shader_path, (1, 1), type, True)
 
