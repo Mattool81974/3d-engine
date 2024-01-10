@@ -202,7 +202,7 @@ class Base_Struct:
 
         self.gravity_force = -9.81 * 0
 
-        self.texture_count = 128
+        self.texture_count = 50
 
     def get_camera_value(self) -> Camera_Value:
         """Return the camera value

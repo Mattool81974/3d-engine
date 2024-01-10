@@ -16,16 +16,23 @@ class Advanced_Struct:
         self.all_vbos = {}
         self.base_struct = base_struct
         self.camera = bs.Camera(self.get_base_struct())
+        self.graphic = {"chair": "cube", "cercle": "triangle", "cube": "cube", "cylinder": "cube", "plan": "triangle", "square": "triangle", "table": "cube"}
 
+        cercle_vbo = model.Loaded_VBO(self.get_base_struct(), "vbos/polygon20.vbo")
+        chair_vbo = model.Loaded_VBO(self.get_base_struct(), "vbos/chair.vbo")
         cube_vbo = model.Cube_VBO(self.get_base_struct())
+        cylinder_vbo = model.Loaded_VBO(self.get_base_struct(), "vbos/polygon_3d20.vbo")
         plan_vbo = model.Triangle_VBO(self.get_base_struct())
         square_vbo = model.Square_VBO(self.get_base_struct())
-        test_vbo = model.Loaded_VBO(self.get_base_struct(), "vbos/table.vbo")
+        table_vbo = model.Loaded_VBO(self.get_base_struct(), "vbos/table.vbo")
 
+        self.all_vbos["cercle"] = cercle_vbo
+        self.all_vbos["chair"] = chair_vbo
         self.all_vbos["cube"] = cube_vbo
+        self.all_vbos["cylinder"] = cylinder_vbo
         self.all_vbos["plan"] = plan_vbo
         self.all_vbos["square"] = square_vbo
-        self.all_vbos["test"] = test_vbo
+        self.all_vbos["table"] = table_vbo
 
     def get_all_textures(self) -> dict:
         """Return a dict of alls the textures
@@ -58,3 +65,11 @@ class Advanced_Struct:
             bs.Camera: camera into the game
         """
         return self.camera
+    
+    def get_graphic(self) -> dict:
+        """Return a dict of graphic type by type
+
+        Returns:
+            list: graphic type by type
+        """
+        return self.graphic

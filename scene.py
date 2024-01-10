@@ -407,7 +407,7 @@ class Graphic_Scene(bs.Transform_Object):
         """
         return self.name
       
-    def new_object(self, name: str, transform: bs.Transform_Object, type: SyntaxError, texture_path: str = "") -> bs.Transform_Object:
+    def new_object(self, name: str, transform: bs.Transform_Object, type: str, scale_texture: bool = True, texture_path: str = "") -> bs.Transform_Object:
         """Create a new object into the scene and return it
 
         Args:
@@ -421,7 +421,7 @@ class Graphic_Scene(bs.Transform_Object):
 
         # If the texture is empty
         if texture_path == "":
-            if type == "cube" or type == "test":
+            if self.get_advanced_struct().get_graphic()[type] == "cube":
                 texture_path = "textures/unknow"
             else:
                 texture_path = "textures/unknow.png"
@@ -448,16 +448,12 @@ class Graphic_Scene(bs.Transform_Object):
                     texture.append(textures[file])
 
         # Add the object into the scene
-        if type == "cube":
-            object = model.Cube_Object(self.get_advanced_struct().get_base_struct(), texture = texture, transform = transform, vbo = vbo, type = type)
-            self.add_object(name, object)
-            return object
-        elif type == "test":
-            object = model.Cube_Object(self.get_advanced_struct().get_base_struct(), one_texture = True, texture = texture, transform = transform, vbo = vbo, type = type)
+        if self.get_advanced_struct().get_graphic()[type] == "cube":
+            object = model.Cube_Object(self.get_advanced_struct().get_base_struct(), scale_texture = scale_texture, texture = texture, transform = transform, vbo = vbo, type = type)
             self.add_object(name, object)
             return object
         else:
-            object = model.Graphic_Object(self.get_advanced_struct().get_base_struct(), texture = texture, transform = transform, vbo = vbo, type = type)
+            object = model.Graphic_Object(self.get_advanced_struct().get_base_struct(), texture = texture[0], transform = transform, vbo = vbo, type = type)
             self.add_object(name, object)
             return object
 
@@ -595,7 +591,7 @@ class Scene(bs.Transform_Object):
                 else: # If the part does not exist
                     print("Matix scene : Warning !! The part \"" + part + "\" into the map \"" + scene.get_map_path() + " \" for loading into the scene \"" + self.get_name() + "\" does not exist.")
     
-    def new_object(self, name: str, collision_type: str = "", collision_width: float = 0.3, graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
+    def new_object(self, name: str, collision_type: str = "", collision_width: float = 0.3, graphic: bool = True, parent: bs.Transform_Object = None, physic: bool = True, position = (0, 0, 0), rotation = (0, 0, 0), scale = (1, 1, 1), scale_texture: bool = True, static: bool = True, texture_path: str = "", type: str = "cube") -> bs.Transform_Object:
         """Create a new object into the scene and return it
 
         Args:
@@ -620,10 +616,12 @@ class Scene(bs.Transform_Object):
         # Add the object into the graphic and physic scene
         if self.use_graphic() and graphic:
             if texture_path == "":
-                if type == "cube": texture_path = "textures/unknow"
-                else: texture_path = "textures/unknow.png"
+                if self.get_advanced_struct().get_graphic()[type] == "cube":
+                    texture_path = "textures/unknow"
+                else:
+                    texture_path = "textures/unknow.png"
 
-            self.get_graphic_scene().new_object(name, object, type, texture_path)
+            self.get_graphic_scene().new_object(name, object, type, scale_texture = scale_texture, texture_path = texture_path)
         if self.use_physic() and physic:
             physic_object = None
             if static:

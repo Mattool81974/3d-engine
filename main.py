@@ -24,8 +24,14 @@ mur1 = scene.new_object("mur1", position = (25, 3, 12), rotation = (0, 0, 0), sc
 mur2 = scene.new_object("mur2", position = (12, 3, 25), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble", type = "cube")
 mur3 = scene.new_object("mur3", position = (-1, 3, 12), rotation = (0, 0, 0), scale = (1, 5, 27), texture_path = "textures/cobble", type = "cube")
 mur4 = scene.new_object("mur4", position = (12, 3, -1), rotation = (0, 0, 0), scale = (25, 5, 1), texture_path = "textures/cobble", type = "cube")
-#test = scene.new_object("test", position = (0, 2, 0), graphic = True, physic = False, texture_path = "textures/unknow.png", type = "test")
+chair1 = scene.new_object("chair1", position = (3, 1, 4), graphic = True, physic = False, texture_path = "textures/table", type = "chair")
+chair2 = scene.new_object("chair2", position = (4, 1, 3), graphic = True, physic = False, texture_path = "textures/table", type = "chair")
+clock = scene.new_object("clock", position = (4.48, 2.5, 2), rotation = (0, -90, 0), graphic = True, physic = False, texture_path = "textures/clock.png", type = "cercle")
+glass = scene.new_object("glass", position = (4, 1.6, 4), graphic = True, physic = False, scale = (0.25, 0.25, 0.25), scale_texture = False, texture_path = "textures/glass", type = "cylinder")
+table = scene.new_object("table", position = (4, 1, 4), graphic = True, physic = False, texture_path = "textures/table", type = "table")
 
+chair1.rotate((0, 90, 0))
+glass.rotate((90, 0, 0))
 player.set_fixed_position((False, False, False))
 
 # Run game

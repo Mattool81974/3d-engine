@@ -74,6 +74,7 @@ class VBO:
         """
         self.attributes = []
         self.base_struct = base_struct
+        self.face_content = []
         self.format = ""
         self.vbo = self.get_base_struct().get_context().buffer(self.get_vertex_data())
 
@@ -112,6 +113,14 @@ class VBO:
                 data.append(vertices[indice])
         return np.array(data, dtype="f4")
     
+    def get_face_content(self) -> list:
+        """Return the face into the VBO
+
+        Returns:
+            list: face into the VBO
+        """
+        return self.face_content
+
     def get_format(self) -> str:
         """Return the format of the VBO
 
@@ -234,9 +243,11 @@ class Cube_VBO(VBO):
         tex_coord_data = self.get_data(tex_coord_vertices, tex_coord_indices)
 
         face = []
+        self.face_content = []
         for i in self.get_face_order():
             for _ in range(6):
                 face.append((i,))
+            self.face_content.append(i)
         face = np.array(face, dtype="f")
 
         vertex_data = np.hstack([vertex_data, face])
@@ -253,6 +264,7 @@ class Loaded_VBO(VBO):
         Args:
             base_struct (bs.Base_Struct): base structure of the game
         """
+        self.face_content = []
         self.lines = []
         if os.path.exists(path):
             file = open(path, "r")
@@ -267,6 +279,14 @@ class Loaded_VBO(VBO):
             self.attributes = self.lines[0].split(" ")
             self.format = self.lines[1]
 
+    def get_face_order(self) -> list:
+        """Return a list of the face order
+
+        Returns:
+            list: list of the face order
+        """
+        return [0, 1, 2, 3, 4, 5]
+
     def get_vertex_data(self):
         """Return the vertex data of the VBO
 
@@ -278,20 +298,7 @@ class Loaded_VBO(VBO):
         indices_temp = self.lines[3].split(" ")
         vertices_temp = self.lines[2].split(" ")
         for v in range(int(len(vertices_temp))):
-            add = 0
-            multiplier = 1
-            if v % 3 == 0:
-                add = 0
-                multiplier = 1
-            elif v % 3 == 1:
-                add = 0.9
-                multiplier = 0.1
-            elif v % 3 == 2:
-                add = 0
-                multiplier = 1
-            if v > len(vertices_temp) / 2:
-                multiplier = 5
-            vertices_temp[v] = float(vertices_temp[v]) * multiplier + add
+            vertices_temp[v] = float(vertices_temp[v])
         for v in range(int(len(vertices_temp) / 3)):
             vertices.append((vertices_temp[v * 3], vertices_temp[v * 3 + 1], vertices_temp[v * 3 + 2]))
 
@@ -316,12 +323,15 @@ class Loaded_VBO(VBO):
             indices_coord.append((indices_coord_temp[i * 3], indices_coord_temp[i * 3 + 1], indices_coord_temp[i * 3 + 2]))
         coord_data = self.get_data(vertices_coord, indices_coord)
 
-        face = self.lines[6].split(" ")
-        for f in range(len(face)):
-            face[f] = (int(face[f]),)
-        face = np.array(face, dtype="f4")
+        if len(self.lines) > 6:
+            face = self.lines[6].split(" ")
+            self.face_content = []
+            for f in range(len(face)):
+                if self.face_content.count(int(face[f])) <= 0: self.face_content.append(int(face[f]))
+                face[f] = (int(face[f]),)
+            face = np.array(face, dtype="f4")
 
-        vertex_data = np.hstack([vertex_data, face])
+            vertex_data = np.hstack([vertex_data, face])
         vertex_data = np.hstack([coord_data, vertex_data])
         return vertex_data
 
@@ -541,9 +551,8 @@ class Graphic_Object:
         self.get_vao().get_program().get_program()["m_model"].write(self.get_transform().get_model_matrix())
         self.get_vao().get_program().get_program()["m_proj"].write(self.get_base_struct().get_camera_value().get_projection())
         self.get_vao().get_program().get_program()["m_view"].write(self.get_base_struct().get_camera_value().get_view())
-        self.get_vao().get_program().get_program()["u_texture_0"] = self.get_base_struct().get_texture_count()
+        self.get_vao().get_program().get_program()["u_texture_0"] = self.texture[0].get_bind_number()
         self.get_vao().get_program().get_program()["u_texture_count_size_0"].write(glm.vec2(self.get_texture_count_size()[0]))
-        self.texture[0].get_texture().use(self.get_base_struct().get_texture_count())
         self.get_base_struct().set_texture_count(self.get_base_struct().get_texture_count() + 1)
 
     def on_render(self) -> None:
@@ -597,10 +606,10 @@ class Cube_Object(Graphic_Object):
         super().__init__(base_struct, texture[0], transform, vbo, shader_path, texture_count_size[0], type, False)
 
         if not self.has_one_texture():
-            for i in range(1, 6):
+            for i in self.get_vbo().get_face_content()[1:]:
                 self.texture.append(texture[i])
                 self.texture_count_size.append(texture_count_size[i])
-        self.set_scale(self.get_transform().get_scale())
+        if self.scale_texture: self.set_scale(self.get_transform().get_scale())
         self.on_init()
 
     def get_scale_texture(self) -> bool:
